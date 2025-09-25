@@ -1,0 +1,129 @@
+:root {
+    --cell-size: 21px;
+    --bordered-cell-size: calc(var(--cell-size) + 1px);
+    line-height: var(--cell-size);
+}
+
+* {
+    box-sizing: border-box;
+    font-family: sans-serif;
+    margin: 0;
+    font-size: large;
+    user-select: none;
+    transform-origin: center center;
+}
+
+body {
+    width: 100dvw;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#app {
+    height: 100dvh;
+    width: min(100dvw, 500px);
+    box-shadow: 0 0 3px #0004;
+}
+
+#calendar {
+    width: 100%;
+    height: 65%;
+    overflow: auto;
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto auto;
+}
+
+#dates, #times, #corner {
+    z-index: 5;
+    background: #fff;
+}
+
+#corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 9;
+}
+
+#dates {
+    position: sticky;
+    left: 0;
+}
+
+#times {
+    position: sticky;
+    top: 0;
+    display: grid;
+    grid-template-columns: calc(var(--bordered-cell-size) / 2) repeat(47, calc(var(--bordered-cell-size))) calc(var(--bordered-cell-size) / 2);
+}
+
+#grid {
+    background: #fff;
+    height: calc(var(--bordered-cell-size) * 365);
+    overflow: hidden;
+}
+
+#times div, #dates div, #grid div {
+    border: 1px solid #0004;
+}
+
+#dates div, #times div {
+    white-space: nowrap;
+    text-align: right;
+    padding: 0;
+}
+
+#times div {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    border-top-width: 0;
+    padding: 0.5ch 0;
+    border-right-color: transparent;
+    border-left-width: 0;
+    border-right-width: 0;
+}
+
+#times div:first-child {
+    border-left-width: 0;
+    width: calc(var(--bordered-cell-size) / 2);
+    overflow: hidden;
+}
+
+#times div:last-child {
+    width: calc(var(--bordered-cell-size) / 2);
+    overflow: hidden;
+    display: flex;
+    justify-content: end;
+    align-items: end;
+}
+
+#corner {
+    border: 1px solid #0004;
+    border-top-width: 0;
+    border-left-width: 0;
+}
+
+#dates div {
+    height: var(--bordered-cell-size);
+    border-top-width: 0;
+    border-left-width: 0;
+    padding: 0 0.5ch;
+}
+
+#dates div:last-child, #grid div:nth-last-child(-n + 48) {
+    border-bottom-width: 0;
+}
+
+#palette {
+    width: 100%;
+    height: 35%;
+    border-top: 1px solid #0004;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+}
