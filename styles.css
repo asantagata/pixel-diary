@@ -6,11 +6,11 @@
 
 * {
     box-sizing: border-box;
-    font-family: sans-serif;
     margin: 0;
     font-size: large;
     user-select: none;
     transform-origin: center center;
+    font-family: "Epunda Sans", sans-serif;
 }
 
 body {
