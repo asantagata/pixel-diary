@@ -1,16 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap');
+
 :root {
     --cell-size: 21px;
     --bordered-cell-size: calc(var(--cell-size) + 1px);
-    line-height: var(--cell-size);
+
+    --accent: #7c67f6;
+
+    --bg: #edecf0;
+    --gentle: #13111d44;
+    --text: #13111d;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
-    font-size: large;
     user-select: none;
     transform-origin: center center;
-    font-family: "Epunda Sans", sans-serif;
+    font-family: "Chocolate Classical Sans", sans-serif;
 }
 
 body {
@@ -19,12 +25,16 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: large;
+    line-height: var(--cell-size);
+    background: var(--bg);
+    color: var(--text);
 }
 
 #app {
     height: 100dvh;
     width: min(100dvw, 500px);
-    box-shadow: 0 0 3px #0004;
+    box-shadow: 0 0 4px #00000044;
 }
 
 #calendar {
@@ -38,7 +48,7 @@ body {
 
 #dates, #times, #corner {
     z-index: 5;
-    background: #fff;
+    background: var(--bg);
 }
 
 #corner {
@@ -46,6 +56,27 @@ body {
     top: 0;
     left: 0;
     z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+#yearslot {
+    font-size: x-large;
+    font-weight: bold;
+}
+
+#corner-icons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: small;
+}
+
+#corner-icons svg {
+    width: 2ch;
 }
 
 #dates {
@@ -61,13 +92,14 @@ body {
 }
 
 #grid {
-    background: #fff;
+    background: var(--bg);
     height: calc(var(--bordered-cell-size) * 365);
     overflow: hidden;
+    position: relative;
 }
 
-#times div, #dates div, #grid div {
-    border: 1px solid #0004;
+#times div, #dates div{
+    border: 1px solid var(--gentle);
 }
 
 #dates div, #times div {
@@ -100,8 +132,12 @@ body {
     align-items: end;
 }
 
+#times div:nth-child(even) {
+    color: var(--gentle);
+}
+
 #corner {
-    border: 1px solid #0004;
+    border: 1px solid var(--gentle);
     border-top-width: 0;
     border-left-width: 0;
 }
@@ -113,17 +149,114 @@ body {
     padding: 0 0.5ch;
 }
 
-#dates div:last-child, #grid div:nth-last-child(-n + 48) {
+#dates div:last-child {
     border-bottom-width: 0;
 }
 
 #palette {
     width: 100%;
     height: 35%;
-    border-top: 1px solid #0004;
+    border-top: 1px solid var(--gentle);
 }
 
 #canvas {
     width: 100%;
     height: 100%;
+}
+
+#selection {
+    border-width: 2px;
+    border-style: solid;
+    animation: pulse 1s linear infinite;
+    width: var(--bordered-cell-size);
+    height: var(--bordered-cell-size);
+    position: absolute;
+    z-index: 15;
+}
+
+@keyframes pulse {
+    0% {border-color: #27273250}
+    50% {border-color: #27273220}
+    100% {border-color: #27273250}
+}
+
+#modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 100dvw;
+    background: var(--gentle);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#modal {
+    max-height: 90dvh;
+    width: calc(min(100dvw, 500px) - 10dvh);
+    background: var(--bg);
+    padding: 3ch;
+    border-radius: 3ch;
+}
+
+.tabset {
+    width: 100%;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    /*background: #00000022;*/
+    border-top-right-radius: 0.5ch;
+    border-top-left-radius: 0.5ch;
+}
+
+.tabhead {
+    padding: 0.5ch 1ch;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--gentle);
+    text-align: center;
+}
+
+#modal.settings .tabhead.settings, #modal.years .tabhead.years, #modal.what .tabhead.what {
+    border: 1px solid var(--gentle);
+    border-top-right-radius: 0.5ch;
+    border-top-left-radius: 0.5ch;
+    border-bottom-width: 0;
+    background: var(--bg);
+}
+
+.tab {
+    display: none;
+    flex-direction: column;
+    gap: 1ch;
+    margin-top: 1ch;
+}
+
+#modal.settings .tab.settings, #modal.years .tab.years, #modal.what .tab.what {
+    display: flex
+}
+
+a {
+    color: var(--accent);
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1ch;
+}
+
+.button {
+    background: linear-gradient(0deg, #fff3 0, #0000 4px, #0000 calc(100% - 4px), #0003 100%), var(--accent);
+    padding: 0.5ch;
+    border-radius: 0.5ch;
+    color: var(--bg);
+    text-align: center;
+    cursor: pointer;
+}
+
+.button:active {
+    transform: translateY(1px);
 }
