@@ -304,21 +304,68 @@ const handleCanvasClick = (event) => {
 
 const renderColorsMenu = () => {
     const liOfActivity = (act, parent = null) => {
-        const li = document.createElement('li');
-        li.style.color = COLORS[parent ? (parent.color * 9 + act.color) : (act.color * 9)];
-        li.appendChild(document.createTextNode(act.name));
+        const li = document.createElement('div');
+        li.className = 'activity';
+        const myColorId = parent ? (parent.color * 9 + act.color) : (act.color * 9);
+        li.style.color = COLORS[myColorId];
+        const swatch = document.createElement('span');
+        swatch.className = 'swatch';
+        swatch.style.background = COLORS[myColorId];
+        li.appendChild(swatch);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = act.name;
+        input.placeholder = 'Name';
+        li.appendChild(swatch);
+        li.appendChild(input);
+
+        swatch.addEventListener('click', () => {
+            const colorIds = (new Array(parent ? 9 : 11).fill(0).map((_, i) => i));
+            const swatches = document.createElement('div');
+            swatches.className = 'swatches';
+            swatches.replaceChildren(...colorIds.map(colorId => {
+                const swatch = document.createElement('span');
+                swatch.className = 'swatch';
+                swatch.style.background = parent ? COLORS[parent.color * 9 + colorId] : COLORS[colorId * 9];
+                if (colorId === myColorId) {
+                    swatch.className = 'swatch shadowed'
+                }
+                swatch.addEventListener('click', () => {
+                    if (colorId !== act.color) {
+                        const opponent = parent
+                            ? parent.subs.find(sub => sub.color === colorId)
+                            : YEAR.activities.find(sub => sub.color === colorId);
+                        if (opponent) {
+                            opponent.color = act.color;
+                        }
+                        act.color = colorId;
+                    }
+                    document.getElementById('mini-modal-wrapper').style.display = 'none';
+                    renderColorsMenu();
+                })
+                return swatch;
+            }));
+            summonMiniModal(swatches);
+        })
+
         return li;
     }
     document.getElementById('color-config').replaceChildren(...YEAR.activities.flatMap(act => {
         const li = liOfActivity(act);
         if (act.subs.length > 0) {
-            const ul = document.createElement('ul');
+            const ul = document.createElement('div');
+            ul.className = 'sub-activities'
             ul.replaceChildren(...act.subs.map(sub => liOfActivity(sub, act)));
             return [li, ul];
         } else {
             return [li];
         }
     }));
+}
+
+const summonMiniModal = (element) => {
+    document.getElementById('mini-modal-inner').replaceChildren(element);
+    document.getElementById('mini-modal-wrapper').style.display = 'flex';
 }
 
 const DEFAULT_YEAR = () => {

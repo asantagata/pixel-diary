@@ -7,6 +7,7 @@
     --accent: #7c67f6;
 
     --bg: #edecf0;
+    --input: #e0dfe4;
     --gentle: #13111d44;
     --text: #13111d;
 }
@@ -173,7 +174,7 @@ body {
     100% {border-color: #27273250}
 }
 
-#modal-wrapper {
+#modal-wrapper, #mini-modal-wrapper {
     position: fixed;
     top: 0;
     left: 0;
@@ -186,7 +187,7 @@ body {
     z-index: 100;
 }
 
-#modal {
+#modal, #mini-modal {
     max-height: 90dvh;
     width: calc(min(100dvw, 500px) - 10dvh);
     background: var(--bg);
@@ -195,6 +196,16 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+#mini-modal {
+    max-height: 95dvh;
+    width: calc(min(100dvw, 500px) - 5dvh);
+}
+
+.x-button {
+    width: fit-content;
+    align-self: end;
 }
 
 .tabset {
@@ -283,7 +294,7 @@ a {
     flex-shrink: 0;
 }
 
-.panel .button.selected {
+.panel .button.selected, .shadowed {
     box-shadow: 0 0 3px #0008;
 }
 
@@ -292,6 +303,12 @@ a {
     max-width: 100%;
     max-height: 100%;
     white-space: nowrap;
+    overflow: hidden;
+    padding: 0.5ch;
+}
+
+.button.dark-text {
+    color: var(--text);
 }
 
 .parent-button::after {
@@ -304,6 +321,10 @@ a {
     position: absolute;
     bottom: 1ch;
     right: 1ch;
+}
+
+.parent-button.dark-text::after {
+    background: var(--text);
 }
 
 #palette.panel-home #panel-home {display: flex;}
@@ -319,3 +340,67 @@ a {
 #palette.panel-9 #panel-9 {display: flex;}
 #palette.panel-10 #panel-10 {display: flex;}
 #palette.panel-11 #panel-11 {display: flex;}
+
+#color-config {
+    max-width: 100%;
+    font-size: small;
+}
+
+.sub-activities {
+    padding-left: 2ch;
+}
+
+.activities, .sub-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 1ch;
+}
+
+.activity {
+    display: flex;
+    gap: 0.5ch;
+    align-items: center;
+    padding: 0 1px;
+    max-width: 100%;
+}
+
+.swatch {
+    outline: 1px solid var(--gentle);
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+}
+
+.activity > *:not(input) {
+    flex-shrink: 0;
+}
+
+input[type=text] {
+    appearance: none;
+    min-width: 0;
+    width: 100dvw;
+    outline: 0;
+    border: 0;
+    background: var(--input);
+    color: var(--text);
+    padding: 0.5ch 1ch;
+    border-radius: 0.5ch;
+}
+
+input[type=text]::placeholder {
+    color: var(--gentle);
+}
+
+.swatches {
+    font-size: xx-large;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1ch;
+    justify-content: center;
+}
+
+.swatches .swatch {
+    margin: 0 calc((((100% - 2ch) / 3) - 1.5em) / 2);
+}

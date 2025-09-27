@@ -30,6 +30,9 @@
     </div>
     <div id="modal-wrapper" onclick="document.getElementById('modal-wrapper').style.display = 'none'">
         <div id="modal" class="settings" onclick="event.stopPropagation()">
+            <div class="x-button" onclick="document.getElementById('modal-wrapper').style.display = 'none'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </div>
             <div class="tabset">
                 <div class="tabhead settings" onclick="document.getElementById('modal').className = 'settings'">Settings</div>
                 <div class="tabhead colors" onclick="document.getElementById('modal').className = 'colors'">Colors</div>
@@ -43,7 +46,7 @@
                 <div class="button">Export this year as an image</div>
             </div>
             <div class="tab colors">
-                <ul id="color-config"></ul>
+                <div id="color-config" class="activities"></div>
             </div>
             <div class="tab what">
                 <p><b>Pixel Diary</b> is a time management project by developer <a href="https://alexsantagata.dev" target="_blank">Alex Santagata</a>, combining two things which, taken individually, he feels indifferent towards: spreadsheets and the past.</p>
@@ -55,6 +58,14 @@
                 </ul>
                 <p>Pixel diary uses <b>local storage</b>, so your data will not transfer to other devices or browsers. It may also be removed if you clear local storage from your browser.</p>
             </div>
+        </div>
+    </div>
+    <div id="mini-modal-wrapper" onclick="document.getElementById('mini-modal-wrapper').style.display = 'none'">
+        <div id="mini-modal" onclick="event.stopPropagation()">
+            <div class="x-button" onclick="document.getElementById('mini-modal-wrapper').style.display = 'none'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </div>
+            <div id="mini-modal-inner"></div>
         </div>
     </div>
 </body>
