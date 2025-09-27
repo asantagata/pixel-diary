@@ -22,9 +22,6 @@
 body {
     width: 100dvw;
     height: 100dvh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-size: large;
     line-height: var(--cell-size);
     background: var(--bg);
@@ -32,7 +29,8 @@ body {
 }
 
 #app {
-    height: 100dvh;
+    margin: auto;
+    height: max(100dvh, min(100dvw, 500px));
     width: min(100dvw, 500px);
     box-shadow: 0 0 4px #00000044;
 }
@@ -194,6 +192,9 @@ body {
     background: var(--bg);
     padding: 3ch;
     border-radius: 3ch;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .tabset {
@@ -201,9 +202,9 @@ body {
     overflow: auto;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    /*background: #00000022;*/
     border-top-right-radius: 0.5ch;
     border-top-left-radius: 0.5ch;
+    flex-shrink: 0;
 }
 
 .tabhead {
@@ -226,6 +227,8 @@ body {
     flex-direction: column;
     gap: 1ch;
     margin-top: 1ch;
+    overflow: auto;
+    max-height: 100%;
 }
 
 #modal.settings .tab.settings, #modal.colors .tab.colors, #modal.what .tab.what {

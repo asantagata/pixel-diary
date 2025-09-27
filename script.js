@@ -285,6 +285,25 @@ const handleCanvasClick = (event) => {
     selectCell(index);
 }
 
+const renderColorsMenu = () => {
+    const liOfActivity = (act, parent = null) => {
+        const li = document.createElement('li');
+        li.style.color = COLORS[parent ? (parent.color * 9 + act.color) : (act.color * 9)];
+        li.appendChild(document.createTextNode(act.name));
+        return li;
+    }
+    document.getElementById('color-config').replaceChildren(...YEAR.activities.flatMap(act => {
+        const li = liOfActivity(act);
+        if (act.subs.length > 0) {
+            const ul = document.createElement('ul');
+            ul.replaceChildren(...act.subs.map(sub => liOfActivity(sub, act)));
+            return [li, ul];
+        } else {
+            return [li];
+        }
+    }));
+}
+
 const DEFAULT_YEAR = () => {
     return {
         cells: new Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255),

@@ -9,7 +9,7 @@
 <body>
     <div id="app">
         <div id="calendar">
-            <div id="corner" onclick="document.getElementById('modal-wrapper').style.display = 'flex'">
+            <div id="corner" onclick="document.getElementById('modal-wrapper').style.display = 'flex'; renderColorsMenu()">
                 <div id="yearslot"></div>
                 <div id="corner-icons">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
@@ -32,8 +32,8 @@
         <div id="modal" class="settings" onclick="event.stopPropagation()">
             <div class="tabset">
                 <div class="tabhead settings" onclick="document.getElementById('modal').className = 'settings'">Settings</div>
-                <div class="tabhead what" onclick="document.getElementById('modal').className = 'what'">What is this?</div>
                 <div class="tabhead colors" onclick="document.getElementById('modal').className = 'colors'">Colors</div>
+                <div class="tabhead what" onclick="document.getElementById('modal').className = 'what'">What is this?</div>
             </div>
             <div class="tab settings">
                 <label class="center">
@@ -43,6 +43,7 @@
                 <div class="button">Export this year as an image</div>
             </div>
             <div class="tab colors">
+                <ul id="color-config"></ul>
             </div>
             <div class="tab what">
                 <p><b>Pixel Diary</b> is a time management project by developer <a href="https://alexsantagata.dev" target="_blank">Alex Santagata</a>, combining two things which, taken individually, he feels indifferent towards: spreadsheets and the past.</p>
