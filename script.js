@@ -187,7 +187,6 @@ const renderYEAR = () => {
             panel.replaceChildren(...[...activity.subs, ...(activity.isTop ? [{isErase: true}] : [{isHome: true}])].map(sub => {
                 const button = document.createElement('div');
                 button.className = 'button center';
-                console.log(rowCount);
                 button.style.width = `calc((100% - ${rowCount - 1}ch) / ${rowCount})`;
                 if (sub.isHome) {
                     button.style.background = 'var(--gentle)';
@@ -221,7 +220,6 @@ const renderYEAR = () => {
                     });
                 } else {
                     button.addEventListener('click', () => {
-                        console.log('clicked');
                         const colorId = sub.isErase ? 255 : activity.isTop ? (sub.color * 9) : (activity.color * 9 + sub.color);
                         paintSELECTION(ctx, colorId)
                     });
@@ -251,7 +249,6 @@ const adaptPaletteToSELECTION = () => {
 }
 
 const paintSELECTION = (ctx, colorId) => {
-    console.log(SELECTION);
     const row = Math.floor(SELECTION / 48) * CELL_SIZE;
     const col = (SELECTION % 48) * CELL_SIZE;
     if (colorId === 255) {
@@ -347,6 +344,54 @@ const renderColorsMenu = () => {
                         const opponent = parent
                             ? parent.subs.find(sub => sub.color === colorId)
                             : YEAR.activities.find(sub => sub.color === colorId);
+
+                        if (opponent) {
+                            if (parent) {
+                                swapPixels(parent.color * 9 + colorId, parent.color * 9 + act.color);
+                            } else if (act.subs.length === 0 && opponent.subs.length === 0) {
+                                swapPixels(colorId * 9, act.color * 9);
+                            } else if (act.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [act.color * 9, opponent.color * 9],
+                                    ...(new Array(9).fill(0)).map(
+                                        (_, i) => [opponent.color * 9 + i, act.color * 9 + i]
+                                    )
+                                ]));
+                            } else if (opponent.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [opponent.color * 9, act.color * 9],
+                                    ...(new Array(9).fill(0)).map(
+                                        (_, i) => [act.color * 9 + i, opponent.color * 9 + i]
+                                    )
+                                ]));
+                            } else {
+                                replacePixels(new Map([
+                                    ...(new Array(9).fill(0)).map(
+                                        (_, i) => [act.color * 9 + i, opponent.color * 9 + i]
+                                    ),
+                                    ...(new Array(9).fill(0)).map(
+                                        (_, i) => [opponent.color * 9 + i, act.color * 9 + i]
+                                    )
+                                ]));
+                            }
+                        } else {
+                            if (parent) {
+                                replacePixels(new Map([
+                                    [parent.color * 9 + act.color, parent.color * 9 + colorId]
+                                ]));
+                            } else if (act.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [act.color * 9, colorId * 9]
+                                ]));
+                            } else {
+                                replacePixels(new Map([
+                                    ...(new Array(9).fill(0)).map(
+                                        (_, i) => [act.color * 9 + i, colorId * 9 + i]
+                                    )
+                                ]));
+                            }
+                        }
+
                         if (opponent) {
                             opponent.color = act.color;
                         }
@@ -447,6 +492,16 @@ const chooseRandomFromUnused = (set, max) => {
 const summonMiniModal = (element) => {
     document.getElementById('mini-modal-inner').replaceChildren(element);
     document.getElementById('mini-modal-wrapper').style.display = 'flex';
+}
+
+const replacePixels = (replacements) => {
+    for (let i = 0; i < YEAR.cells.length; i++) {
+        YEAR.cells[i] = replacements.get(YEAR.cells[i]) ?? YEAR.cells[i];
+    }
+}
+
+const swapPixels = (a, b) => {
+    replacePixels(new Map([[a, b], [b, a]]));
 }
 
 const DEFAULT_YEAR = () => {
