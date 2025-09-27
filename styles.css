@@ -44,6 +44,7 @@ body {
     display: grid;
     grid-template-rows: auto auto;
     grid-template-columns: auto auto;
+    position: relative;
 }
 
 #dates, #times, #corner {
