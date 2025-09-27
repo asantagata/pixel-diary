@@ -168,9 +168,13 @@ const renderYEAR = () => {
             const panel = document.createElement('div');
             panel.className = 'panel'
             panel.id = `panel-${activity.isTop ? 'home' : activity.color}`;
+            const childCount = activity.subs.length + 1;
+            const rowCount = Math.ceil(childCount / 3);
             panel.replaceChildren(...[...activity.subs, ...(activity.isTop ? [{isErase: true}] : [{isHome: true}])].map(sub => {
                 const button = document.createElement('div');
                 button.className = 'button center';
+                console.log(rowCount);
+                button.style.width = `calc((100% - ${rowCount - 1}ch) / ${rowCount})`;
                 if (sub.isHome) {
                     button.style.background = 'var(--gentle)';
                     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
@@ -179,8 +183,14 @@ const renderYEAR = () => {
                     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eraser-icon lucide-eraser"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>`;
                 } else {
                     button.style.background = activity.isTop ? COLORS[sub.color * 9] : COLORS[activity.color * 9 + sub.color];
+                    if (activity.isTop && sub.subs.length > 0) {
+                        button.classList.add('parent-button');
+                    }
+                    const label = document.createElement('div');
+                    label.className = 'button-label';
                     const text = document.createTextNode(sub.name);
-                    button.appendChild(text);
+                    label.appendChild(text);
+                    button.appendChild(label);
                 }
                 if (activity.isTop && !sub.isErase && sub.subs.length > 0) {
                     button.addEventListener('click', () => {
@@ -269,11 +279,11 @@ const DEFAULT_YEAR = () => {
                 ]
             },
             {
-                name: 'Leisure', color: 1, subs: [
+                name: 'Leisure Leisure Leisure Leisure Leisure Leisure', color: 1, subs: [
                     {name: 'Social media', color: 3},
                     {name: 'TV', color: 2},
                     {name: 'Games', color: 8},
-                    {name: 'Music', color: 1}
+                    {name: 'Hobbies', color: 1}
                 ]
             },
             {
@@ -293,6 +303,9 @@ const DEFAULT_YEAR = () => {
                     {name: 'Cooking', color: 3},
                     {name: 'Appointments', color: 7}
                 ]
+            },
+            {
+                name: 'Transit', color: 8, subs: []
             }
         ]
     }
@@ -301,11 +314,11 @@ const DEFAULT_YEAR = () => {
 const initialize = () => {
     YEAR = DEFAULT_YEAR()
     renderYEAR();
-    const current = new Date();
-    const jan1 = new Date(new Date().getFullYear(), 0, 1);
-    const diff = current - jan1;
-    const diffHalfHour = Math.floor(diff / (1000 * 60 * 30));
-    selectCell(diffHalfHour);
+    const now = new Date();
+    const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+    const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+    selectCell(elapsedDays * 48 + elapsedHalfhours);
 }
 
 initialize();
