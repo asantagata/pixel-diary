@@ -265,6 +265,7 @@ a {
     text-align: center;
     cursor: pointer;
     position: relative;
+    font-size: large;
 }
 
 .button:active {
@@ -294,8 +295,12 @@ a {
     flex-shrink: 0;
 }
 
-.panel .button.selected, .shadowed {
+.panel .button.selected {
     box-shadow: 0 0 3px #0008;
+}
+
+.shadowed {
+    box-shadow: 0 0 5px #000c;
 }
 
 .button-label {
@@ -403,4 +408,15 @@ input[type=text]::placeholder {
 
 .swatches .swatch {
     margin: 0 calc((((100% - 2ch) / 3) - 1.5em) / 2);
+}
+
+.button-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1ch;
+}
+
+.activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .button-pair,
+.sub-activities .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .button {
+    display: none;
 }

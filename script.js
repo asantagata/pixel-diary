@@ -194,7 +194,7 @@ const renderYEAR = () => {
                     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
                 } else if (sub.isErase) {
                     button.style.background = 'var(--gentle)';
-                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eraser-icon lucide-eraser"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>`;
+                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-delete-icon lucide-delete"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/></svg>`;
                 } else {
                     const colorIndex = activity.isTop ? sub.color * 9 : activity.color * 9 + sub.color;
                     button.id = `button-${colorIndex}`;
@@ -221,6 +221,7 @@ const renderYEAR = () => {
                     });
                 } else {
                     button.addEventListener('click', () => {
+                        console.log('clicked');
                         const colorId = sub.isErase ? 255 : activity.isTop ? (sub.color * 9) : (activity.color * 9 + sub.color);
                         paintSELECTION(ctx, colorId)
                     });
@@ -250,6 +251,7 @@ const adaptPaletteToSELECTION = () => {
 }
 
 const paintSELECTION = (ctx, colorId) => {
+    console.log(SELECTION);
     const row = Math.floor(SELECTION / 48) * CELL_SIZE;
     const col = (SELECTION % 48) * CELL_SIZE;
     if (colorId === 255) {
@@ -269,14 +271,22 @@ const paintSELECTION = (ctx, colorId) => {
     }
     ctx.stroke();
     YEAR.cells[SELECTION] = colorId;
-    if (SELECTION < YEAR.cells.length - 1) {
-        selectCell(SELECTION + 1);
+    if (colorId === 255) {
+        if (SELECTION > 0) {
+            selectCell(SELECTION - 1, false);
+        } else {
+            adaptPaletteToSELECTION();
+        }
     } else {
-        adaptPaletteToSELECTION();
+        if (SELECTION < YEAR.cells.length - 1) {
+            selectCell(SELECTION + 1);
+        } else {
+            adaptPaletteToSELECTION();
+        }
     }
 }
 
-const selectCell = (index) => {
+const selectCell = (index, adapt = true) => {
     const cornerRect = document.getElementById('corner').getBoundingClientRect();
     document.getElementById('selection').style.left = `${cornerRect.width + (index % 48) * CELL_SIZE}px`;
     document.getElementById('selection').style.top = `${cornerRect.height + Math.floor(index / 48) * CELL_SIZE}px`;
@@ -288,7 +298,9 @@ const selectCell = (index) => {
         });
     }));
     SELECTION = index;
-    adaptPaletteToSELECTION();
+    if (adapt) {
+        adaptPaletteToSELECTION();
+    }
 }
 
 const handleCanvasClick = (event) => {
@@ -327,7 +339,7 @@ const renderColorsMenu = () => {
                 const swatch = document.createElement('span');
                 swatch.className = 'swatch';
                 swatch.style.background = parent ? COLORS[parent.color * 9 + colorId] : COLORS[colorId * 9];
-                if (colorId === myColorId) {
+                if (colorId === act.color) {
                     swatch.className = 'swatch shadowed'
                 }
                 swatch.addEventListener('click', () => {
@@ -355,12 +367,81 @@ const renderColorsMenu = () => {
         if (act.subs.length > 0) {
             const ul = document.createElement('div');
             ul.className = 'sub-activities'
-            ul.replaceChildren(...act.subs.map(sub => liOfActivity(sub, act)));
+            ul.replaceChildren(
+                ...act.subs.map(sub => liOfActivity(sub, act)),
+                (() => {
+                    const newButton = document.createElement('div');
+                    newButton.className = 'button center';
+                    newButton.style.background = COLORS[act.color * 9];
+                    if (!WHITE_TEXT[act.color * 9]) {
+                        newButton.className = 'button center dark-text'
+                    }
+                    newButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Activity`
+                    newButton.addEventListener('click', () => {
+                        const colorId = chooseRandomFromUnused(act.subs.map(sub => sub.color), 9);
+                        act.subs.push({
+                            name: '',
+                            color: colorId
+                        });
+                        renderColorsMenu();
+                    })
+                    return newButton;
+                })()
+            );
             return [li, ul];
         } else {
             return [li];
         }
-    }));
+    }), (() => {
+        const newButtons = document.createElement('div');
+        newButtons.className = 'button-pair';
+        newButtons.replaceChildren(...[
+            {
+                name: 'Category',
+                create: () => {
+                    const colorId = chooseRandomFromUnused(YEAR.activities.map(act => act.color), 11);
+                    const sub1ColorId = Math.floor(Math.random() * 8) + 1;
+                    const sub2ColorId = Math.floor(Math.random() * sub1ColorId);
+                    return {
+                        name: '',
+                        color: colorId,
+                        subs: [
+                            {name: '', color: sub1ColorId},
+                            {name: '', color: sub2ColorId}
+                        ]
+                    }
+                }
+            },
+            {
+                name: 'Activity',
+                create: () => {
+                    const colorId = chooseRandomFromUnused(YEAR.activities.map(act => act.color), 11);
+                    return {
+                        name: '',
+                        color: colorId,
+                        subs: []
+                    }
+                }
+            }
+        ].map(button => {
+            const newButton = document.createElement('div');
+            newButton.className = 'button center';
+            newButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> ${button.name}`
+            newButton.addEventListener('click', () => {
+                YEAR.activities.push(button.create());
+                renderColorsMenu();
+            })
+            return newButton;
+        }));
+        return newButtons;
+    })());
+}
+
+const chooseRandomFromUnused = (set, max) => {
+    const fullSet = new Array(max).fill(0).map((_, i) => i);
+    const diff = fullSet.filter(x => !set.includes(x));
+    if (diff.length === 0) return null;
+    return diff[Math.floor(Math.random() * diff.length)];
 }
 
 const summonMiniModal = (element) => {
