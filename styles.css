@@ -153,12 +153,6 @@ body {
     border-bottom-width: 0;
 }
 
-#palette {
-    width: 100%;
-    height: 35%;
-    border-top: 1px solid var(--gentle);
-}
-
 #canvas {
     width: 100%;
     height: 100%;
@@ -218,7 +212,7 @@ body {
     text-align: center;
 }
 
-#modal.settings .tabhead.settings, #modal.years .tabhead.years, #modal.what .tabhead.what {
+#modal.settings .tabhead.settings, #modal.colors .tabhead.colors, #modal.what .tabhead.what {
     border: 1px solid var(--gentle);
     border-top-right-radius: 0.5ch;
     border-top-left-radius: 0.5ch;
@@ -233,7 +227,7 @@ body {
     margin-top: 1ch;
 }
 
-#modal.settings .tab.settings, #modal.years .tab.years, #modal.what .tab.what {
+#modal.settings .tab.settings, #modal.colors .tab.colors, #modal.what .tab.what {
     display: flex
 }
 
@@ -249,7 +243,7 @@ a {
 }
 
 .button {
-    background: linear-gradient(0deg, #fff3 0, #0000 4px, #0000 calc(100% - 4px), #0003 100%), var(--accent);
+    background: var(--accent);
     padding: 0.5ch;
     border-radius: 0.5ch;
     color: var(--bg);
@@ -260,3 +254,40 @@ a {
 .button:active {
     transform: translateY(1px);
 }
+
+#palette {
+    width: 100%;
+    height: 35%;
+    border-top: 1px solid var(--gentle);
+}
+
+.panel {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 1ch;
+    gap: 1ch;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.panel .button {
+    min-height: calc((100% - 2ch) / 3);
+    min-width: calc((100% - 2ch) / 3);
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+#palette.panel-home #panel-home {display: flex;}
+#palette.panel-0 #panel-0 {display: flex;}
+#palette.panel-1 #panel-1 {display: flex;}
+#palette.panel-2 #panel-2 {display: flex;}
+#palette.panel-3 #panel-3 {display: flex;}
+#palette.panel-4 #panel-4 {display: flex;}
+#palette.panel-5 #panel-5 {display: flex;}
+#palette.panel-6 #panel-6 {display: flex;}
+#palette.panel-7 #panel-7 {display: flex;}
+#palette.panel-8 #panel-8 {display: flex;}
+#palette.panel-9 #panel-9 {display: flex;}
+#palette.panel-10 #panel-10 {display: flex;}
+#palette.panel-11 #panel-11 {display: flex;}

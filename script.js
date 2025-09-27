@@ -4,6 +4,7 @@ const set24HourTime = (bool) => {
 }
 
 const CELL_SIZE = 22;
+let YEAR = null;
 
 const COLORS = [
     [
@@ -32,11 +33,11 @@ const COLORS = [
         'hsl(122, 24%, 29%)', 'hsl(129, 49%, 33%)', 'hsl(126, 51%, 59%)',
     ], [
         'hsl(167, 60%, 52%)', 'hsl(171, 48%, 68%)', 'hsl(187, 62%, 35%)',
-        'hsl(148, 55%, 58%)', 'hsl(184, 52%, 49%)', 'hsl(173, 75%, 70%)',
+        'hsl(150, 55%, 58%)', 'hsl(184, 52%, 49%)', 'hsl(173, 75%, 70%)',
         'hsl(165, 45%, 27%)', 'hsl(169, 60%, 37%)', 'hsl(155, 62%, 60%)',
     ], [
         'hsl(199, 66%, 53%)', 'hsl(203, 54%, 75%)', 'hsl(211, 68%, 49%)',
-        'hsl(185, 61%, 56%)', 'hsl(216, 58%, 47%)', 'hsl(205, 71%, 68%)',
+        'hsl(188, 61%, 56%)', 'hsl(216, 58%, 47%)', 'hsl(205, 71%, 68%)',
         'hsl(197, 45%, 42%)', 'hsl(204, 76%, 30%)', 'hsl(195, 84%, 63%)',
     ], [
         'hsl(213, 27%, 71%)', 'hsl(217, 15%, 78%)', 'hsl(225, 36%, 59%)',
@@ -128,6 +129,7 @@ const renderYEAR = () => {
         document.getElementById('canvas').style.width = `${canvasWidth}px`;
         document.getElementById('canvas').setAttribute('height', `${canvasHeight}`);
         document.getElementById('canvas').style.height = `${canvasHeight}px`;
+        document.getElementById('grid').style.height = `calc(var(--bordered-cell-size) * ${daysInYear(YEAR.year)});`
     }
 
     setupCanvas();
@@ -160,6 +162,53 @@ const renderYEAR = () => {
 
     drawCells();
     drawGridlines();
+
+    const renderActivities = () => {
+        document.getElementById('palette').replaceChildren(...[
+            {isTop: true, subs: YEAR.activities},
+            ...YEAR.activities.filter(x => x.subs.length > 0)
+        ].map(activity => {
+            const panel = document.createElement('div');
+            panel.className = 'panel'
+            panel.id = `panel-${activity.isTop ? 'home' : activity.color}`;
+            panel.replaceChildren(...[...activity.subs, ...(activity.isTop ? [{isErase: true}] : [{isHome: true}])].map(sub => {
+                const button = document.createElement('div');
+                button.className = 'button center';
+                if (sub.isHome) {
+                    button.style.background = 'var(--gentle)';
+                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
+                } else if (sub.isErase) {
+                    button.style.background = 'var(--gentle)';
+                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eraser-icon lucide-eraser"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>`;
+                } else {
+                    button.style.background = activity.isTop ? COLORS[sub.color][0] : COLORS[activity.color][sub.color];
+                    const text = document.createTextNode(sub.name);
+                    button.appendChild(text);
+                }
+                if (activity.isTop && !sub.isErase && sub.subs.length > 0) {
+                    button.addEventListener('click', () => {
+                        document.getElementById('palette').className = `panel-${sub.color}`;
+                    });
+                } else if (sub.isHome) {
+                    button.addEventListener('click', () => {
+                        document.getElementById('palette').className = 'panel-home';
+                    });
+                } else {
+                    button.addEventListener('click', () => {
+                        console.log('color', activity.color, sub.color);
+                    });
+                }
+                return button;
+            }));
+            return panel;
+        }))
+    }
+
+    renderActivities();
+}
+
+const paintSelected = (index) => {
+
 }
 
 const selectCell = (index) => {
@@ -185,10 +234,53 @@ const handleCanvasClick = (event) => {
     selectCell(index);
 }
 
-let YEAR = {
-    cells: new Uint8Array(48 * daysInYear((new Date()).getFullYear())),
-    year: (new Date()).getFullYear(),
+const DEFAULT_YEAR = () => {
+    return {
+        cells: new Uint8Array(48 * daysInYear((new Date()).getFullYear())),
+        year: (new Date()).getFullYear(),
+        activities: [
+            {
+                name: 'Survival', color: 7, subs: [
+                    {name: 'Eating', color: 1},
+                    {name: 'Hygiene', color: 3},
+                    {name: 'Exercise', color: 0},
+                    {name: 'Sleep', color: 6}
+                ]
+            },
+            {
+                name: 'Leisure', color: 1, subs: [
+                    {name: 'Social media', color: 3},
+                    {name: 'TV', color: 2},
+                    {name: 'Games', color: 8},
+                    {name: 'Music', color: 1}
+                ]
+            },
+            {
+                name: 'Work', color: 6, subs: []
+            },
+            {
+                name: 'Social', color: 10, subs: [
+                    {name: 'Seeing friends', color: 4},
+                    {name: 'Seeing family', color: 5},
+                    {name: 'Events', color: 3}
+                ]
+            },
+            {
+                name: 'Errands', color: 3, subs: [
+                    {name: 'Shopping', color: 2},
+                    {name: 'Cleaning', color: 5},
+                    {name: 'Cooking', color: 3},
+                    {name: 'Appointments', color: 7}
+                ]
+            }
+        ]
+    }
 }
 
-renderYEAR();
-selectCell(0);
+const initialize = () => {
+    YEAR = DEFAULT_YEAR()
+    renderYEAR();
+    selectCell(0);
+}
+
+initialize();
