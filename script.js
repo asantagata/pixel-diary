@@ -1,7 +1,6 @@
 const set24HourTime = (bool) => {
     CONFIGS.timeIn24 = bool;
-    renderYEAR();
-    selectCell(SELECTION);
+    toRerender.info = true;
 }
 
 const CELL_SIZE = 22;
@@ -81,7 +80,7 @@ const daysInYear = (year) => {
     return isLeap(year) ? 366 : 365;
 }
 
-const renderYEAR = () => {
+const renderYEARInfo = () => {
     const rows = daysInYear(YEAR.year);
     const cols = 48;
 
@@ -103,7 +102,7 @@ const renderYEAR = () => {
         let monthId = 0;
         let daysOfMonth = 0;
 
-        document.getElementById('dates').replaceChildren(...new Array(rows).fill(0).map((_, i) => {
+        document.getElementById('dates').replaceChildren(...new Array(rows).fill(0).map(_ => {
             const div = document.createElement('div');
             div.appendChild(document.createTextNode(`${months[monthId].name} ${daysOfMonth + 1}`));
             daysOfMonth++;
@@ -128,11 +127,14 @@ const renderYEAR = () => {
     }
 
     renderDatetimes();
+}
+
+const renderYEARCanvas = () => {
+    const rows = daysInYear(YEAR.year);
+    const cols = 48;
 
     const canvasWidth = CELL_SIZE * cols;
     const canvasHeight = CELL_SIZE * rows;
-
-    const ctx = document.getElementById('canvas').getContext('2d');
 
     const setupCanvas = () => {
         document.getElementById('canvas').setAttribute('width', `${canvasWidth}`);
@@ -143,6 +145,8 @@ const renderYEAR = () => {
     }
 
     setupCanvas();
+
+    const ctx = document.getElementById('canvas').getContext('2d');
 
     const drawGridlines = () => {
 
@@ -166,71 +170,78 @@ const renderYEAR = () => {
     const drawCells = () => {
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
-                // const index = row * 48 + col;
+                const index = row * 48 + col;
+                const colorIndex = YEAR.cells[index];
+                if (colorIndex !== 255) {
+                    ctx.fillStyle = COLORS[colorIndex];
+                    ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
             }
         }
+        ctx.fill();
     }
 
     drawCells();
     drawGridlines();
 
-    const renderActivities = () => {
-        document.getElementById('palette').replaceChildren(...[
-            {isTop: true, subs: YEAR.activities},
-            ...YEAR.activities.filter(x => x.subs.length > 0)
-        ].map(activity => {
-            const panel = document.createElement('div');
-            panel.className = 'panel'
-            panel.id = `panel-${activity.isTop ? 'home' : activity.color}`;
-            const childCount = activity.subs.length + 1;
-            const rowCount = Math.ceil(childCount / 3);
-            panel.replaceChildren(...[...activity.subs, ...(activity.isTop ? [{isErase: true}] : [{isHome: true}])].map(sub => {
-                const button = document.createElement('div');
-                button.className = 'button center';
-                button.style.width = `calc((100% - ${rowCount - 1}ch) / ${rowCount})`;
-                if (sub.isHome) {
-                    button.style.background = 'var(--gentle)';
-                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
-                } else if (sub.isErase) {
-                    button.style.background = 'var(--gentle)';
-                    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-delete-icon lucide-delete"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/></svg>`;
-                } else {
-                    const colorIndex = activity.isTop ? sub.color * 9 : activity.color * 9 + sub.color;
-                    button.id = `button-${colorIndex}`;
-                    button.style.background = COLORS[colorIndex];
-                    if (!WHITE_TEXT[colorIndex]) {
-                        button.classList.add('dark-text');
-                    }
-                    if (activity.isTop && sub.subs.length > 0) {
-                        button.classList.add('parent-button');
-                    }
-                    const label = document.createElement('div');
-                    label.className = 'button-label';
-                    const text = document.createTextNode(sub.name);
-                    label.appendChild(text);
-                    button.appendChild(label);
-                }
-                if (activity.isTop && !sub.isErase && sub.subs.length > 0) {
-                    button.addEventListener('click', () => {
-                        document.getElementById('palette').className = `panel-${sub.color}`;
-                    });
-                } else if (sub.isHome) {
-                    button.addEventListener('click', () => {
-                        document.getElementById('palette').className = 'panel-home';
-                    });
-                } else {
-                    button.addEventListener('click', () => {
-                        const colorId = sub.isErase ? 255 : activity.isTop ? (sub.color * 9) : (activity.color * 9 + sub.color);
-                        paintSELECTION(ctx, colorId)
-                    });
-                }
-                return button;
-            }));
-            return panel;
-        }))
-    }
+    return ctx;
+}
 
-    renderActivities();
+const renderYEARPalette = () => {
+    const ctx = document.getElementById('canvas').getContext('2d');
+    document.getElementById('palette').replaceChildren(...[
+        {isTop: true, subs: YEAR.activities},
+        ...YEAR.activities.filter(x => x.subs.length > 0)
+    ].map(activity => {
+        const panel = document.createElement('div');
+        panel.className = 'panel'
+        panel.id = `panel-${activity.isTop ? 'home' : activity.color}`;
+        const childCount = activity.subs.length + 1;
+        const rowCount = Math.ceil(childCount / 3);
+        panel.replaceChildren(...[...activity.subs, ...(activity.isTop ? [{isErase: true}] : [{isHome: true}])].map(sub => {
+            const button = document.createElement('div');
+            button.className = 'button center';
+            button.style.width = `calc((100% - ${rowCount - 1}ch) / ${rowCount})`;
+            if (sub.isHome) {
+                button.style.background = 'var(--gentle)';
+                button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
+            } else if (sub.isErase) {
+                button.style.background = 'var(--gentle)';
+                button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-delete-icon lucide-delete"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m12 9 6 6"/><path d="m18 9-6 6"/></svg>`;
+            } else {
+                const colorIndex = activity.isTop ? sub.color * 9 : activity.color * 9 + sub.color;
+                button.id = `button-${colorIndex}`;
+                button.style.background = COLORS[colorIndex];
+                if (!WHITE_TEXT[colorIndex]) {
+                    button.classList.add('dark-text');
+                }
+                if (activity.isTop && sub.subs.length > 0) {
+                    button.classList.add('parent-button');
+                }
+                const label = document.createElement('div');
+                label.className = 'button-label';
+                const text = document.createTextNode(sub.name);
+                label.appendChild(text);
+                button.appendChild(label);
+            }
+            if (activity.isTop && !sub.isErase && sub.subs.length > 0) {
+                button.addEventListener('click', () => {
+                    document.getElementById('palette').className = `panel-${sub.color}`;
+                });
+            } else if (sub.isHome) {
+                button.addEventListener('click', () => {
+                    document.getElementById('palette').className = 'panel-home';
+                });
+            } else {
+                button.addEventListener('click', () => {
+                    const colorId = sub.isErase ? 255 : activity.isTop ? (sub.color * 9) : (activity.color * 9 + sub.color);
+                    paintSELECTION(ctx, colorId)
+                });
+            }
+            return button;
+        }));
+        return panel;
+    }))
 }
 
 const adaptPaletteToSELECTION = () => {
@@ -323,6 +334,10 @@ const renderColorsMenu = () => {
         li.appendChild(swatch);
         const input = document.createElement('input');
         input.type = 'text';
+        input.addEventListener('change', (e) => {
+            act.name = e.target.value;
+            toRerender.palette = true;
+        });
         input.value = act.name;
         input.placeholder = 'Name';
         li.appendChild(swatch);
@@ -341,6 +356,8 @@ const renderColorsMenu = () => {
                 }
                 swatch.addEventListener('click', () => {
                     if (colorId !== act.color) {
+                        toRerender.palette = true;
+                        toRerender.canvas = true;
                         const opponent = parent
                             ? parent.subs.find(sub => sub.color === colorId)
                             : YEAR.activities.find(sub => sub.color === colorId);
@@ -423,6 +440,7 @@ const renderColorsMenu = () => {
                     }
                     newButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Activity`
                     newButton.addEventListener('click', () => {
+                        toRerender.palette = true;
                         const colorId = chooseRandomFromUnused(act.subs.map(sub => sub.color), 9);
                         act.subs.push({
                             name: '',
@@ -473,6 +491,7 @@ const renderColorsMenu = () => {
             newButton.className = 'button center';
             newButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> ${button.name}`
             newButton.addEventListener('click', () => {
+                toRerender.palette = true;
                 YEAR.activities.push(button.create());
                 renderColorsMenu();
             })
@@ -502,6 +521,28 @@ const replacePixels = (replacements) => {
 
 const swapPixels = (a, b) => {
     replacePixels(new Map([[a, b], [b, a]]));
+}
+
+const closeModal = () => {
+    document.getElementById('modal-wrapper').style.display = 'none';
+    if (toRerender.info) renderYEARInfo();
+    if (toRerender.canvas) renderYEARCanvas();
+    if (toRerender.palette) {
+        renderYEARPalette();
+        document.getElementById('palette').className = 'panel-home';
+    }
+    if (toRerender.info || toRerender.canvas || toRerender.palette) selectCell(SELECTION);
+    toRerender = {
+        info: false,
+        canvas: false,
+        palette: false,
+    }
+}
+
+let toRerender = {
+    info: false,
+    canvas: false,
+    palette: false,
 }
 
 const DEFAULT_YEAR = () => {
@@ -552,7 +593,9 @@ const DEFAULT_YEAR = () => {
 
 const initialize = () => {
     YEAR = DEFAULT_YEAR()
-    renderYEAR();
+    renderYEARInfo();
+    renderYEARCanvas();
+    renderYEARPalette();
     const now = new Date();
     const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
