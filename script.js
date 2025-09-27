@@ -182,7 +182,9 @@ const renderYEAR = () => {
                     button.style.background = 'var(--gentle)';
                     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eraser-icon lucide-eraser"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>`;
                 } else {
-                    button.style.background = activity.isTop ? COLORS[sub.color * 9] : COLORS[activity.color * 9 + sub.color];
+                    const colorIndex = activity.isTop ? sub.color * 9 : activity.color * 9 + sub.color;
+                    button.id = `button-${colorIndex}`;
+                    button.style.background = COLORS[colorIndex];
                     if (activity.isTop && sub.subs.length > 0) {
                         button.classList.add('parent-button');
                     }
@@ -215,6 +217,21 @@ const renderYEAR = () => {
     renderActivities();
 }
 
+const adaptPaletteToSELECTION = () => {
+    const color = YEAR.cells[SELECTION];
+    document.querySelector('.button.selected')?.classList.remove('selected');
+    if (color !== 255) {
+        const colorGroup = Math.floor(color / 9);
+        const activity = YEAR.activities.find(a => a.color === colorGroup);
+        if (activity.subs.length === 0) {
+            document.getElementById('palette').className = 'panel-home';
+        } else {
+            document.getElementById('palette').className = `panel-${colorGroup}`;
+        }
+        document.getElementById(`button-${color}`).classList.add('selected');
+    }
+}
+
 const paintSELECTION = (ctx, colorId) => {
     const row = Math.floor(SELECTION / 48) * CELL_SIZE;
     const col = (SELECTION % 48) * CELL_SIZE;
@@ -237,6 +254,8 @@ const paintSELECTION = (ctx, colorId) => {
     YEAR.cells[SELECTION] = colorId;
     if (SELECTION < YEAR.cells.length - 1) {
         selectCell(SELECTION + 1);
+    } else {
+        adaptPaletteToSELECTION();
     }
 }
 
@@ -252,6 +271,7 @@ const selectCell = (index) => {
         });
     }));
     SELECTION = index;
+    adaptPaletteToSELECTION();
 }
 
 const handleCanvasClick = (event) => {
@@ -279,7 +299,7 @@ const DEFAULT_YEAR = () => {
                 ]
             },
             {
-                name: 'Leisure Leisure Leisure Leisure Leisure Leisure', color: 1, subs: [
+                name: 'Leisure', color: 1, subs: [
                     {name: 'Social media', color: 3},
                     {name: 'TV', color: 2},
                     {name: 'Games', color: 8},
