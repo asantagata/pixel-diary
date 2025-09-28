@@ -1,10 +1,12 @@
 const set24HourTime = (bool) => {
     CONFIGS.timeIn24 = bool;
     toRerender.info = true;
+    setConfigsInStorage();
 }
 
 const CELL_SIZE = 22;
 let YEAR = null;
+let CONFIGS = null;
 let SELECTION = 0;
 
 const COLORS = [
@@ -14,7 +16,7 @@ const COLORS = [
 
     'hsl(13, 93%, 67%)', 'hsl(17, 81%, 74%)', 'hsl(25, 95%, 55%)',
     'hsl(359, 88%, 70%)', 'hsl(28, 85%, 61%)', 'hsl(19, 98%, 82%)',
-    'hsl(11, 83%, 47%)', 'hsl(18, 93%, 51%)', 'hsl(15, 95%, 77%)',
+    'hsl(11, 83%, 47%)', 'hsl(18, 93%, 51%)', 'hsl(12,95%,77%)',
 
     'hsl(28, 26%, 60%)', 'hsl(32, 14%, 77%)', 'hsl(40, 28%, 48%)',
     'hsl(14, 21%, 63%)', 'hsl(48, 18%, 54%)', 'hsl(34, 31%, 75%)',
@@ -66,11 +68,6 @@ const WHITE_TEXT = [
     true,true,true,true,true,false,true,true,true,
     true,false,true,true,true,false,true,true,true
 ];
-
-let CONFIGS = {
-    timeIn24: false,
-    dark: false
-}
 
 const isLeap = (year) => {
     return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
@@ -259,9 +256,12 @@ const renderYEARPalette = () => {
     }))
 }
 
-const adaptPaletteToSELECTION = () => {
+const highlightSELECTIONColor = () => {
     document.querySelector('.button.selected')?.classList.remove('selected');
     document.getElementById(`button-${YEAR.cells[SELECTION]}`)?.classList.add('selected');
+}
+
+const gotoSELECTIONPalettePage = () => {
     const color = YEAR.cells[SELECTION];
     if (color !== 255) {
         const colorGroup = Math.floor(color / 9);
@@ -295,21 +295,15 @@ const paintSELECTION = (ctx, colorId) => {
     ctx.stroke();
     YEAR.cells[SELECTION] = colorId;
     if (colorId === 255) {
-        if (SELECTION > 0) {
-            selectCell(SELECTION - 1, false);
-        } else {
-            adaptPaletteToSELECTION();
-        }
+        selectCell(SELECTION - 1, false);
     } else {
-        if (SELECTION < YEAR.cells.length - 1) {
-            selectCell(SELECTION + 1);
-        } else {
-            adaptPaletteToSELECTION();
-        }
+        selectCell(SELECTION + 1, false);
     }
+    setYEARPixelsInDATABASE();
 }
 
-const selectCell = (index, adapt = true) => {
+const selectCell = (indexIn, adapt = true) => {
+    const index = Math.max(0, Math.min(YEAR.cells.length, indexIn));
     const cornerRect = document.getElementById('corner').getBoundingClientRect();
     document.getElementById('selection').style.left = `${cornerRect.width + (index % 48) * CELL_SIZE}px`;
     document.getElementById('selection-v').style.left = `${(index % 48) * CELL_SIZE}px`;
@@ -325,10 +319,9 @@ const selectCell = (index, adapt = true) => {
         });
     }));
     SELECTION = index;
-    document.querySelector('.button.selected')?.classList.remove('selected');
-    document.getElementById(`button-${YEAR.cells[index]}`)?.classList.add('selected');
+    highlightSELECTIONColor();
     if (adapt)
-        adaptPaletteToSELECTION();
+        gotoSELECTIONPalettePage();
 }
 
 const handleCanvasClick = (event) => {
@@ -694,11 +687,16 @@ const swapPixels = (a, b) => {
 const closeModal = () => {
     document.getElementById('modal-wrapper').style.display = 'none';
     if (toRerender.info) renderYEARInfo();
-    if (toRerender.canvas) renderYEARCanvas();
+    if (toRerender.canvas) {
+        renderYEARCanvas();
+        setYEARPixelsInDATABASE();
+    }
     if (toRerender.palette) {
+        document.getElementById('palette').className = 'panel-home';
+        setYEARPaletteInStorage();
         renderYEARPalette();
     }
-    if (toRerender.info || toRerender.canvas || toRerender.palette) selectCell(SELECTION);
+    if (toRerender.info || toRerender.canvas || toRerender.palette) selectCell(SELECTION, false);
     toRerender = {
         info: false,
         canvas: false,
@@ -712,64 +710,129 @@ let toRerender = {
     palette: false,
 }
 
-const DEFAULT_YEAR = () => {
-    return {
-        cells: new Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255),
-        year: (new Date()).getFullYear(),
-        activities: [
-            {
-                name: 'Survival', color: 7, subs: [
-                    {name: 'Eating', color: 1},
-                    {name: 'Hygiene', color: 3},
-                    {name: 'Exercise', color: 0},
-                    {name: 'Sleep', color: 6}
-                ]
-            },
-            {
-                name: 'Leisure', color: 1, subs: [
-                    {name: 'Social media', color: 3},
-                    {name: 'TV', color: 2},
-                    {name: 'Games', color: 8},
-                    {name: 'Hobbies', color: 1}
-                ]
-            },
-            {
-                name: 'Work', color: 6, subs: []
-            },
-            {
-                name: 'Social', color: 10, subs: [
-                    {name: 'Seeing friends', color: 4},
-                    {name: 'Seeing family', color: 5},
-                    {name: 'Events', color: 3}
-                ]
-            },
-            {
-                name: 'Errands', color: 3, subs: [
-                    {name: 'Shopping', color: 2},
-                    {name: 'Cleaning', color: 5},
-                    {name: 'Cooking', color: 3},
-                    {name: 'Appointments', color: 7}
-                ]
-            },
-            {
-                name: 'Transit', color: 8, subs: []
-            }
-        ]
+const DEFAULT_PALETTE = () => {
+    return [
+        {
+            name: 'Survival', color: 7, subs: [
+                {name: 'Eating', color: 1},
+                {name: 'Hygiene', color: 3},
+                {name: 'Exercise', color: 0},
+                {name: 'Sleep', color: 6}
+            ]
+        },
+        {
+            name: 'Leisure', color: 1, subs: [
+                {name: 'Social media', color: 3},
+                {name: 'TV', color: 2},
+                {name: 'Games', color: 8},
+                {name: 'Hobbies', color: 1}
+            ]
+        },
+        {
+            name: 'Work', color: 6, subs: []
+        },
+        {
+            name: 'Social', color: 10, subs: [
+                {name: 'Seeing friends', color: 4},
+                {name: 'Seeing family', color: 5},
+                {name: 'Events', color: 3}
+            ]
+        },
+        {
+            name: 'Errands', color: 3, subs: [
+                {name: 'Shopping', color: 2},
+                {name: 'Cleaning', color: 5},
+                {name: 'Cooking', color: 3},
+                {name: 'Appointments', color: 7}
+            ]
+        },
+        {
+            name: 'Transit', color: 8, subs: []
+        }
+    ];
+}
+
+let DATABASE = null;
+
+const setYEARPixelsInDATABASE = () => {
+    const tx = DATABASE.transaction('years', 'readwrite');
+    tx.objectStore('years').put(YEAR.cells, YEAR.year);
+}
+
+const doWithPIXELSFromDATABASE = (key, func, funcIfFailed = console.error) => {
+    const tx = DATABASE.transaction('years', 'readonly');
+    const req = tx.objectStore('years').get(key);
+    req.onsuccess = () => func(req.result);
+    req.onerror = () => funcIfFailed();
+}
+
+const setYEARPaletteInStorage = () => {
+    localStorage.setItem(`${YEAR.year}`, JSON.stringify(YEAR.activities));
+}
+
+const getPaletteFromStorage = (year) => {
+    const str = localStorage.getItem(`${year}`);
+    return str ? JSON.parse(str) : null;
+}
+
+const getLatestPaletteFromStorage = () => {
+    const latestYear = Math.max(...Object.keys(localStorage).map(x => parseInt(x)).filter(x => !Number.isNaN(x)));
+    if (latestYear > 0) {
+        return JSON.parse(localStorage.getItem(`${YEAR.year}`));
+    } else {
+        return null;
     }
 }
 
+const setConfigsInStorage = () => {
+    localStorage.setItem('configs', JSON.stringify(CONFIGS));
+}
+
+const getConfigsFromStorage = () => {
+    const str = localStorage.getItem('configs');
+    return str ? JSON.parse(str) : null;
+}
+
 const initialize = () => {
-    YEAR = DEFAULT_YEAR()
-    renderYEARInfo();
-    renderYEARCanvas();
-    renderYEARPalette();
-    window.setTimeout(() => {
-        const now = new Date();
-        const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
-        const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
-        selectCell(elapsedDays * 48 + elapsedHalfhours);
-    }, 100);
+    CONFIGS = getConfigsFromStorage() || {
+        timeIn24: false
+    };
+
+    const year = (new Date().getFullYear());
+
+    const request = indexedDB.open('years', 1);
+
+    request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('years')) {
+            db.createObjectStore('years');
+        }
+    }
+
+    request.onsuccess = () => {
+        DATABASE = request.result;
+        doWithPIXELSFromDATABASE(year, (cells) => {
+            YEAR = {
+                year: year,
+                activities: getPaletteFromStorage(year) || (getLatestPaletteFromStorage() || DEFAULT_PALETTE()),
+                cells: cells || Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255)
+            };
+            renderYEARInfo();
+            renderYEARPalette();
+            renderYEARCanvas();
+
+            window.setTimeout(() => {
+                const now = new Date();
+                const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+                const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+                selectCell(elapsedDays * 48 + elapsedHalfhours);
+            }, 100);
+
+            setYEARPixelsInDATABASE();
+        });
+    }
+
 
 }
 
