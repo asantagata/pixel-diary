@@ -763,11 +763,14 @@ const initialize = () => {
     renderYEARInfo();
     renderYEARCanvas();
     renderYEARPalette();
-    const now = new Date();
-    const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
-    const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
-    selectCell(elapsedDays * 48 + elapsedHalfhours);
+    window.setTimeout(() => {
+        const now = new Date();
+        const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+        const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+        selectCell(elapsedDays * 48 + elapsedHalfhours);
+    }, 100);
+
 }
 
 initialize();
