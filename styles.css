@@ -51,6 +51,28 @@ body {
     background: var(--bg);
 }
 
+#selection-h, #selection-v {
+    position: absolute;
+    display: block;
+    width: 0;
+    height: 0;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+#selection-h {
+    width: min(100dvw, 500px);
+    border-bottom: 2px solid #27273230;
+    transform: translateY(calc(var(--cell-size) / 2));
+}
+
+#selection-v {
+    height: 65dvh;
+    border-right: 2px solid #27273230;
+    transform: translateX(calc(var(--cell-size) / 2));
+}
+
 #corner {
     position: sticky;
     top: 0;
@@ -118,7 +140,7 @@ body {
     border-right-width: 0;
 }
 
-#times div:first-child {
+#times div:nth-child(2) {
     border-left-width: 0;
     width: calc(var(--bordered-cell-size) / 2);
     overflow: hidden;
@@ -166,17 +188,6 @@ body {
     height: var(--bordered-cell-size);
     position: absolute;
     z-index: 4;
-}
-
-#selection-lines {
-    border-width: 2px;
-    border-style: solid;
-    animation: pulse 1s linear infinite;
-    position: absolute;
-    z-index: 4;
-    pointer-events: none;
-    width: 100dvw;
-    height: 100dvh;
 }
 
 @keyframes pulse {

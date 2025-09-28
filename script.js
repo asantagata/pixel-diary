@@ -102,7 +102,14 @@ const renderYEARInfo = () => {
         let monthId = 0;
         let daysOfMonth = 0;
 
-        document.getElementById('dates').replaceChildren(...new Array(rows).fill(0).map(_ => {
+        document.getElementById('dates').replaceChildren(
+            (() => {
+                const span = document.createElement('span');
+                span.id = 'selection-h';
+                return span;
+            })(),
+
+            ...new Array(rows).fill(0).map(_ => {
             const div = document.createElement('div');
             div.appendChild(document.createTextNode(`${months[monthId].name} ${daysOfMonth + 1}`));
             daysOfMonth++;
@@ -113,7 +120,15 @@ const renderYEARInfo = () => {
             return div;
         }));
 
-        document.getElementById('times').replaceChildren(...newRange(cols + 1).map(i => {
+        document.getElementById('times').replaceChildren(
+
+            (() => {
+                const span = document.createElement('span');
+                span.id = 'selection-v';
+                return span;
+            })(),
+
+            ...newRange(cols + 1).map(i => {
             const div = document.createElement('div');
             const maxHour = CONFIGS.timeIn24 ? 24 : 12;
             const hour = `${(i >> 1) % maxHour || maxHour}`;
@@ -245,6 +260,8 @@ const renderYEARPalette = () => {
 }
 
 const adaptPaletteToSELECTION = () => {
+    document.querySelector('.button.selected')?.classList.remove('selected');
+    document.getElementById(`button-${YEAR.cells[SELECTION]}`)?.classList.add('selected');
     const color = YEAR.cells[SELECTION];
     if (color !== 255) {
         const colorGroup = Math.floor(color / 9);
@@ -295,7 +312,11 @@ const paintSELECTION = (ctx, colorId) => {
 const selectCell = (index, adapt = true) => {
     const cornerRect = document.getElementById('corner').getBoundingClientRect();
     document.getElementById('selection').style.left = `${cornerRect.width + (index % 48) * CELL_SIZE}px`;
+    document.getElementById('selection-v').style.left = `${(index % 48) * CELL_SIZE}px`;
+
     document.getElementById('selection').style.top = `${cornerRect.height + Math.floor(index / 48) * CELL_SIZE}px`;
+    document.getElementById('selection-h').style.top = `${Math.floor(index / 48) * CELL_SIZE}px`;
+
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
         document.getElementById('selection').scrollIntoView({
             behavior: 'smooth',
