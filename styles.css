@@ -199,13 +199,18 @@ body {
 }
 
 #mini-modal {
-    max-height: 95dvh;
+    max-height: 80dvh;
     width: calc(min(100dvw, 500px) - 5dvh);
 }
 
-.x-button {
+.modal-x {
     width: fit-content;
     align-self: end;
+}
+
+#mini-modal-inner {
+    overflow: auto;
+    max-height: 100%;
 }
 
 .tabset {
@@ -352,7 +357,7 @@ a {
 }
 
 .sub-activities {
-    padding-left: 2ch;
+    padding-left: calc(1.5em + 1ch);
 }
 
 .activities, .sub-activities {
@@ -363,7 +368,7 @@ a {
 
 .activity {
     display: flex;
-    gap: 0.5ch;
+    gap: 1ch;
     align-items: center;
     padding: 0 1px;
     max-width: 100%;
@@ -419,4 +424,38 @@ input[type=text]::placeholder {
 .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .button-pair,
 .sub-activities .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .activity ~ .button {
     display: none;
+}
+
+.x-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: hsl(355, 74%, 57%);
+}
+
+.select-activity {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1ch;
+    margin-top: 1em;
+}
+
+.select-activity .button {
+    flex-shrink: 0;
+    flex-grow: 1;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.inline-button {
+    display: inline-block;
+    color: var(--bg);
+    padding: 0.5ch 1ch;
+    border-radius: 0.5ch;
 }
