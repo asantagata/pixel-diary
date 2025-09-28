@@ -676,7 +676,6 @@ const closeModal = () => {
     if (toRerender.canvas) renderYEARCanvas();
     if (toRerender.palette) {
         renderYEARPalette();
-        document.getElementById('palette').className = 'panel-home';
     }
     if (toRerender.info || toRerender.canvas || toRerender.palette) selectCell(SELECTION);
     toRerender = {

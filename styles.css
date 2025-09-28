@@ -168,6 +168,17 @@ body {
     z-index: 4;
 }
 
+#selection-lines {
+    border-width: 2px;
+    border-style: solid;
+    animation: pulse 1s linear infinite;
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    width: 100dvw;
+    height: 100dvh;
+}
+
 @keyframes pulse {
     0% {border-color: #27273250}
     50% {border-color: #27273220}
@@ -409,6 +420,7 @@ input[type=text]::placeholder {
     align-items: center;
     gap: 1ch;
     justify-content: center;
+    padding: 6px 0;
 }
 
 .swatches .swatch {
