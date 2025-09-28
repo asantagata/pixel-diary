@@ -64,13 +64,13 @@ body {
 #selection-h {
     width: min(100dvw, 500px);
     border-bottom: 2px solid #27273230;
-    transform: translateY(calc(var(--cell-size) / 2));
+    transform: translateY(calc(var(--cell-size) / 2 - 1px));
 }
 
 #selection-v {
     height: 65dvh;
     border-right: 2px solid #27273230;
-    transform: translateX(calc(var(--cell-size) / 2));
+    transform: translateX(calc(var(--cell-size) / 2 - 1px));
 }
 
 #corner {
