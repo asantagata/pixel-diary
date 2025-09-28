@@ -246,7 +246,6 @@ const renderYEARPalette = () => {
 
 const adaptPaletteToSELECTION = () => {
     const color = YEAR.cells[SELECTION];
-    document.querySelector('.button.selected')?.classList.remove('selected');
     if (color !== 255) {
         const colorGroup = Math.floor(color / 9);
         const activity = YEAR.activities.find(a => a.color === colorGroup);
@@ -255,7 +254,6 @@ const adaptPaletteToSELECTION = () => {
         } else {
             document.getElementById('palette').className = `panel-${colorGroup}`;
         }
-        document.getElementById(`button-${color}`).classList.add('selected');
     }
 }
 
@@ -306,9 +304,10 @@ const selectCell = (index, adapt = true) => {
         });
     }));
     SELECTION = index;
-    if (adapt) {
+    document.querySelector('.button.selected')?.classList.remove('selected');
+    document.getElementById(`button-${YEAR.cells[index]}`)?.classList.add('selected');
+    if (adapt)
         adaptPaletteToSELECTION();
-    }
 }
 
 const handleCanvasClick = (event) => {
