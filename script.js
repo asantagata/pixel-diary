@@ -113,7 +113,7 @@ const renderYEARInfo = () => {
             return div;
         }));
 
-        document.getElementById('times').replaceChildren(...new Array(cols + 1).fill(0).map((_, i) => {
+        document.getElementById('times').replaceChildren(...newRange(cols + 1).map(i => {
             const div = document.createElement('div');
             const maxHour = CONFIGS.timeIn24 ? 24 : 12;
             const hour = `${(i >> 1) % maxHour || maxHour}`;
@@ -326,10 +326,78 @@ const renderColorsMenu = () => {
         const li = document.createElement('div');
         li.className = 'activity';
         const myColorId = parent ? (parent.color * 9 + act.color) : (act.color * 9);
-        li.style.color = COLORS[myColorId];
         const swatch = document.createElement('span');
         swatch.className = 'swatch';
         swatch.style.background = COLORS[myColorId];
+        swatch.addEventListener('click', () => {
+            const colorIds = newRange(parent ? 9 : 11);
+            const swatches = document.createElement('div');
+            swatches.className = 'swatches';
+            swatches.replaceChildren(...colorIds.map(colorId => {
+                const swatch = document.createElement('span');
+                swatch.className = 'swatch';
+                swatch.style.background = parent ? COLORS[parent.color * 9 + colorId] : COLORS[colorId * 9];
+                if (colorId === act.color) {
+                    swatch.className = 'swatch shadowed'
+                }
+                swatch.addEventListener('click', () => {
+                    if (colorId !== act.color) {
+                        toRerender.palette = true;
+                        toRerender.canvas = true;
+                        const opponent = parent
+                            ? parent.subs.find(sub => sub.color === colorId)
+                            : YEAR.activities.find(sub => sub.color === colorId);
+
+                        if (opponent) {
+                            if (parent) {
+                                swapPixels(parent.color * 9 + colorId, parent.color * 9 + act.color);
+                            } else if (act.subs.length === 0 && opponent.subs.length === 0) {
+                                swapPixels(colorId * 9, act.color * 9);
+                            } else if (act.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [act.color * 9, opponent.color * 9],
+                                    ...newRange(9).map(i => [opponent.color * 9 + i, act.color * 9 + i])
+                                ]));
+                            } else if (opponent.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [opponent.color * 9, act.color * 9],
+                                    ...newRange(9).map(i => [act.color * 9 + i, opponent.color * 9 + i])
+                                ]));
+                            } else {
+                                replacePixels(new Map([
+                                    ...newRange(9).map(i => [opponent.color * 9 + i, act.color * 9 + i]),
+                                    ...newRange(9).map(i => [act.color * 9 + i, opponent.color * 9 + i])
+                                ]));
+                            }
+                        } else {
+                            if (parent) {
+                                replacePixels(new Map([
+                                    [parent.color * 9 + act.color, parent.color * 9 + colorId]
+                                ]));
+                            } else if (act.subs.length === 0) {
+                                replacePixels(new Map([
+                                    [act.color * 9, colorId * 9]
+                                ]));
+                            } else {
+                                replacePixels(new Map(
+                                    newRange(9).map(i => [act.color * 9 + i, colorId * 9 + i])
+                                ));
+                            }
+                        }
+
+                        if (opponent) {
+                            opponent.color = act.color;
+                        }
+                        act.color = colorId;
+                    }
+                    document.getElementById('mini-modal-wrapper').style.display = 'none';
+                    renderColorsMenu();
+                })
+                return swatch;
+            }));
+            summonMiniModal(swatches);
+        })
+
         li.appendChild(swatch);
         const input = document.createElement('input');
         input.type = 'text';
@@ -340,7 +408,7 @@ const renderColorsMenu = () => {
         input.value = act.name;
         input.placeholder = 'Name';
         const xButton = document.createElement('span');
-        xButton.className = 'x-button';
+        xButton.className = 'x-button act-button';
         xButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
         xButton.addEventListener('click', () => {
 
@@ -352,7 +420,7 @@ const renderColorsMenu = () => {
             } else if (!parent &&
                 ((act.subs.length === 0 && !YEAR.cells.includes(myColorId)) ||
             (act.subs.length > 0
-                && (new Array(9).fill(0).map((_, i) => i)).every(
+                && newRange(9).every(
                     i => !YEAR.cells.includes(act.color * 9 + i)
                 )))
             ) {
@@ -379,7 +447,7 @@ const renderColorsMenu = () => {
                             replacePixels(new Map([[myColorId, newColor]]));
                         } else {
                             replacePixels(new Map(
-                                (new Array(9).fill(0)).map((_, i) => [myColorId + i, newColor])
+                                newRange(9).map(i => [myColorId + i, newColor])
                             ));
                         }
                         toRerender.canvas = true;
@@ -442,86 +510,60 @@ const renderColorsMenu = () => {
 
         li.appendChild(swatch);
         li.appendChild(input);
-        li.appendChild(xButton);
 
-        swatch.addEventListener('click', () => {
-            const colorIds = (new Array(parent ? 9 : 11).fill(0).map((_, i) => i));
-            const swatches = document.createElement('div');
-            swatches.className = 'swatches';
-            swatches.replaceChildren(...colorIds.map(colorId => {
-                const swatch = document.createElement('span');
-                swatch.className = 'swatch';
-                swatch.style.background = parent ? COLORS[parent.color * 9 + colorId] : COLORS[colorId * 9];
-                if (colorId === act.color) {
-                    swatch.className = 'swatch shadowed'
-                }
-                swatch.addEventListener('click', () => {
-                    if (colorId !== act.color) {
-                        toRerender.palette = true;
-                        toRerender.canvas = true;
-                        const opponent = parent
-                            ? parent.subs.find(sub => sub.color === colorId)
-                            : YEAR.activities.find(sub => sub.color === colorId);
+        if (!parent) {
+            if (act.subs.length === 0) {
+                const categorify = document.createElement('span');
+                categorify.className = 'act-button';
+                categorify.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid2x2-icon lucide-grid-2x2"><path d="M12 3v18"/><path d="M3 12h18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
-                        if (opponent) {
-                            if (parent) {
-                                swapPixels(parent.color * 9 + colorId, parent.color * 9 + act.color);
-                            } else if (act.subs.length === 0 && opponent.subs.length === 0) {
-                                swapPixels(colorId * 9, act.color * 9);
-                            } else if (act.subs.length === 0) {
-                                replacePixels(new Map([
-                                    [act.color * 9, opponent.color * 9],
-                                    ...(new Array(9).fill(0)).map(
-                                        (_, i) => [opponent.color * 9 + i, act.color * 9 + i]
-                                    )
-                                ]));
-                            } else if (opponent.subs.length === 0) {
-                                replacePixels(new Map([
-                                    [opponent.color * 9, act.color * 9],
-                                    ...(new Array(9).fill(0)).map(
-                                        (_, i) => [act.color * 9 + i, opponent.color * 9 + i]
-                                    )
-                                ]));
-                            } else {
-                                replacePixels(new Map([
-                                    ...(new Array(9).fill(0)).map(
-                                        (_, i) => [act.color * 9 + i, opponent.color * 9 + i]
-                                    ),
-                                    ...(new Array(9).fill(0)).map(
-                                        (_, i) => [opponent.color * 9 + i, act.color * 9 + i]
-                                    )
-                                ]));
-                            }
-                        } else {
-                            if (parent) {
-                                replacePixels(new Map([
-                                    [parent.color * 9 + act.color, parent.color * 9 + colorId]
-                                ]));
-                            } else if (act.subs.length === 0) {
-                                replacePixels(new Map([
-                                    [act.color * 9, colorId * 9]
-                                ]));
-                            } else {
-                                replacePixels(new Map([
-                                    ...(new Array(9).fill(0)).map(
-                                        (_, i) => [act.color * 9 + i, colorId * 9 + i]
-                                    )
-                                ]));
-                            }
-                        }
-
-                        if (opponent) {
-                            opponent.color = act.color;
-                        }
-                        act.color = colorId;
-                    }
-                    document.getElementById('mini-modal-wrapper').style.display = 'none';
+                categorify.addEventListener('click', () => {
+                    const sub1ColorId = 0;
+                    const sub2ColorId = Math.floor(Math.random() * 8) + 1;
+                    act.subs = [
+                        {name: '', color: sub1ColorId},
+                        {name: '', color: sub2ColorId}
+                    ];
                     renderColorsMenu();
+                    toRerender.palette = true;
                 })
-                return swatch;
-            }));
-            summonMiniModal(swatches);
-        })
+
+                li.append(categorify);
+            } else {
+                const activitify = document.createElement('span');
+                activitify.className = 'act-button';
+                activitify.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-icon lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>`;
+
+                activitify.addEventListener('click', () => summonMiniModal((() => {
+                    const div = document.createElement('div');
+                    div.className = 'col-gap';
+                    const message = document.createElement('div');
+                    message.replaceChildren(document.createTextNode(
+                        'Turn category into activity? This will remove all sub-activities.'
+                    ));
+                    const button = document.createElement('div');
+                    button.className = 'button';
+                    button.replaceChildren(document.createTextNode(
+                        'Confirm'
+                    ));
+                    button.addEventListener('click', () => {
+                        act.subs = [];
+                        document.getElementById('mini-modal-wrapper').style.display = 'none';
+                        renderColorsMenu();
+                        toRerender.palette = true;
+
+                        replacePixels(new Map(newRange(9).map(i => [act.color * 9 + i, act.color * 9])));
+                        toRerender.canvas = true;
+                    })
+                    div.replaceChildren(message, button);
+                    return div;
+                })()))
+
+                li.append(activitify);
+            }
+        }
+
+        li.appendChild(xButton);
 
         return li;
     }
@@ -602,8 +644,12 @@ const renderColorsMenu = () => {
     })());
 }
 
+const newRange = (n) => {
+    return new Array(n).fill(0).map((_, i) => i);
+}
+
 const chooseRandomFromUnused = (set, max) => {
-    const fullSet = new Array(max).fill(0).map((_, i) => i);
+    const fullSet = newRange(max);
     const diff = fullSet.filter(x => !set.includes(x));
     if (diff.length === 0) return null;
     return diff[Math.floor(Math.random() * diff.length)];

@@ -360,7 +360,7 @@ a {
     padding-left: calc(1.5em + 1ch);
 }
 
-.activities, .sub-activities {
+.activities, .sub-activities, .col-gap {
     display: flex;
     flex-direction: column;
     gap: 1ch;
@@ -426,11 +426,14 @@ input[type=text]::placeholder {
     display: none;
 }
 
-.x-button {
+.act-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+}
+
+.x-button {
     color: hsl(355, 74%, 57%);
 }
 
