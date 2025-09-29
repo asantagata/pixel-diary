@@ -813,6 +813,70 @@ const renderSavesMenu = () => {
 
 }
 
+const importYear = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', () => {
+        if (input.files) {
+            const file = input.files[0];
+            if (!['json', 'application/json'].includes(file.type.toLowerCase())) {
+                summonMiniModal(document.createTextNode(`Invalid file type "${file.type}".`));
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    const newYearObj = JSON.parse(text);
+                    const newYear = {
+                        year: newYearObj.year,
+                        activities: newYearObj.activities,
+                        cells: stringToCells(newYearObj.cells)
+                    };
+
+                    const proceedWithImport = () => {
+                        setYEARPaletteInStorage(newYear);
+                        setYEARPixelsInDATABASE(newYear, (e) => {
+                            renderSavesMenu();
+                            document.getElementById('mini-modal-wrapper').style.display = 'none';
+                            if (YEAR.year === newYear.year) {
+                                initialize(YEAR.year);
+                                document.getElementById('modal-wrapper').style.display = 'none';
+                            }
+                        });
+                    }
+
+                    if (localStorage.getItem(`${newYearObj.year}`)) {
+                        const div = document.createElement('div');
+                        div.className = 'col-gap';
+                        const message = document.createElement('div');
+                        message.replaceChildren(document.createTextNode(
+                            `Import new year? This will replace your current data for the year ${newYearObj.year}.`
+                        ));
+                        const button = document.createElement('div');
+                        button.className = 'button';
+                        button.replaceChildren(document.createTextNode(
+                            'Confirm'
+                        ));
+                        button.addEventListener('click', () => {
+                            proceedWithImport();
+                        });
+                        div.replaceChildren(message, button);
+                        summonMiniModal(div);
+                    } else {
+                        proceedWithImport();
+                    }
+                } catch (err) {
+                    summonMiniModal(document.createTextNode('Invalid import.'));
+                }
+            }
+            reader.readAsText(file);
+        }
+    });
+    input.click();
+}
+
 const newRange = (n) => {
     return new Array(n).fill(0).map((_, i) => i);
 }
@@ -859,9 +923,13 @@ const closeModal = () => {
     }
 }
 
-const setYEARPixelsInDATABASE = () => {
+const setYEARPixelsInDATABASE = (inputYear = null, onsuccess = null) => {
+    const year = inputYear || YEAR;
     const tx = DATABASE.transaction('years', 'readwrite');
-    tx.objectStore('years').put(YEAR.cells, YEAR.year);
+    const req = tx.objectStore('years').put(year.cells, year.year);
+    if (onsuccess) {
+        req.onsuccess = onsuccess;
+    }
 }
 
 const doWithPixelsFromDATABASE = (key, func, funcIfFailed = console.error) => {
@@ -871,8 +939,9 @@ const doWithPixelsFromDATABASE = (key, func, funcIfFailed = console.error) => {
     req.onerror = () => funcIfFailed();
 }
 
-const setYEARPaletteInStorage = () => {
-    localStorage.setItem(`${YEAR.year}`, JSON.stringify(YEAR.activities));
+const setYEARPaletteInStorage = (inputYear = null) => {
+    const year = inputYear || YEAR;
+    localStorage.setItem(`${year.year}`, JSON.stringify(year.activities));
 }
 
 const getPaletteFromStorage = (year) => {
