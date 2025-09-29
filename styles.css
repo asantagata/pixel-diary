@@ -184,8 +184,8 @@ body {
     border-width: 2px;
     border-style: solid;
     animation: pulse 1s linear infinite;
-    width: var(--bordered-cell-size);
-    height: var(--bordered-cell-size);
+    width: calc(var(--bordered-cell-size) + 1px);
+    height: calc(var(--bordered-cell-size) + 1px);
     position: absolute;
     z-index: 4;
 }

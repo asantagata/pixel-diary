@@ -304,11 +304,14 @@ const paintSELECTION = (ctx, colorId) => {
 
 const selectCell = (indexIn, adapt = true) => {
     const index = Math.max(0, Math.min(YEAR.cells.length, indexIn));
-    const cornerRect = document.getElementById('corner').getBoundingClientRect();
-    document.getElementById('selection').style.left = `${cornerRect.width + (index % 48) * CELL_SIZE}px`;
+    const calendar = document.getElementById('calendar');
+    const calendarRect = calendar.getBoundingClientRect();
+    document.getElementById('selection').style.right =
+        `${calendarRect.width - calendar.scrollWidth + (48 - (index % 48)) * CELL_SIZE - CELL_SIZE}px`;
     document.getElementById('selection-v').style.left = `${(index % 48) * CELL_SIZE}px`;
 
-    document.getElementById('selection').style.top = `${cornerRect.height + Math.floor(index / 48) * CELL_SIZE}px`;
+    document.getElementById('selection').style.bottom =
+        `${calendarRect.height - calendar.scrollHeight + (daysInYear(YEAR.year) - Math.floor(index / 48)) * CELL_SIZE - CELL_SIZE + 2}px`;
     document.getElementById('selection-h').style.top = `${Math.floor(index / 48) * CELL_SIZE}px`;
 
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
@@ -759,7 +762,7 @@ const setYEARPixelsInDATABASE = () => {
     tx.objectStore('years').put(YEAR.cells, YEAR.year);
 }
 
-const doWithPIXELSFromDATABASE = (key, func, funcIfFailed = console.error) => {
+const doWithPixelsFromDATABASE = (key, func, funcIfFailed = console.error) => {
     const tx = DATABASE.transaction('years', 'readonly');
     const req = tx.objectStore('years').get(key);
     req.onsuccess = () => func(req.result);
@@ -797,6 +800,9 @@ const initialize = () => {
     CONFIGS = getConfigsFromStorage() || {
         timeIn24: false
     };
+    if (CONFIGS.timeIn24) {
+        document.getElementById('24hour').setAttribute('checked', 'true');
+    }
 
     const year = (new Date().getFullYear());
 
@@ -811,27 +817,25 @@ const initialize = () => {
 
     request.onsuccess = () => {
         DATABASE = request.result;
-        doWithPIXELSFromDATABASE(year, (cells) => {
+        doWithPixelsFromDATABASE(year, (cells) => {
             YEAR = {
                 year: year,
                 activities: getPaletteFromStorage(year) || (getLatestPaletteFromStorage() || DEFAULT_PALETTE()),
-                cells: cells || Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255)
+                cells: cells || new Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255)
             };
             renderYEARInfo();
             renderYEARPalette();
             renderYEARCanvas();
 
-            window.setTimeout(() => {
-                const now = new Date();
-                const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-                const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
-                const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
-                selectCell(elapsedDays * 48 + elapsedHalfhours);
-            }, 100);
+            const now = new Date();
+            const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+            const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+            selectCell(elapsedDays * 48 + elapsedHalfhours);
 
             setYEARPixelsInDATABASE();
         });
-    }
+    };
 
 
 }
