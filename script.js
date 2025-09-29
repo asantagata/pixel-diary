@@ -418,6 +418,7 @@ const renderColorsMenu = () => {
         li.appendChild(swatch);
         const input = document.createElement('input');
         input.type = 'text';
+        input.maxLength = 30;
         input.addEventListener('change', (e) => {
             act.name = e.target.value;
             toRerender.palette = true;
