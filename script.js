@@ -5,6 +5,8 @@ const set24HourTime = (bool) => {
 }
 
 const CELL_SIZE = 22;
+const CHARS = `\`1234567890ú-=qwertyuiop[]óasdfghjkl;'zxcvbnm,íá./~!@#$%^&*()_+QWERTYUIOP{é}|ASDFGHJKL:\\"ZXCVBNM<>? `;
+const FROMCHARS = {...Object.fromEntries(CHARS.split('').map((x, i) => [x, i])), ' ': 255};
 let YEAR = null;
 let CONFIGS = null;
 let SELECTION = 0;
@@ -123,6 +125,14 @@ const isLeap = (year) => {
 
 const daysInYear = (year) => {
     return isLeap(year) ? 366 : 365;
+}
+
+const cellsToString = (cells) => {
+    return Array.from(cells, (byte, i) => byte === 255 ? CHARS[99] : CHARS[byte]).join('');
+}
+
+const stringToCells = (string) => {
+    return string.split('').map(char => FROMCHARS[char]);
 }
 
 const renderYEARInfo = () => {
@@ -732,12 +742,34 @@ const renderSavesMenu = () => {
             {
                 name: 'Download image',
                 className: 'image',
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-down-icon lucide-image-down"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19 3 3v-5.5"/><path d="m17 22 3-3"/><circle cx="9" cy="9" r="2"/></svg>`
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-down-icon lucide-image-down"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19 3 3v-5.5"/><path d="m17 22 3-3"/><circle cx="9" cy="9" r="2"/></svg>`,
+                onClick: () => {
+
+                }
             },
             {
                 name: 'Export to device',
                 className: 'export',
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`,
+                onClick: () => {
+                    doWithPixelsFromDATABASE(parseInt(year), (cells) => {
+                        console.log(cells);
+                        const activities = getPaletteFromStorage(`${year}`);
+                        const yearObj = {
+                            year: parseInt(year),
+                            activities,
+                            cells: cellsToString(cells)
+                        };
+                        const jsonString = JSON.stringify(yearObj, null, 2);
+                        const blob = new Blob([jsonString], {type: 'application/json'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `pixel-diary-${year}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
+                }
             },
             ...(YEAR.year !== parseInt(year) ? [{
                 name: 'Delete',
