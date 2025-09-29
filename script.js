@@ -8,6 +8,54 @@ const CELL_SIZE = 22;
 let YEAR = null;
 let CONFIGS = null;
 let SELECTION = 0;
+let toRerender = {
+    info: false,
+    canvas: false,
+    palette: false,
+}
+let DATABASE = null;
+
+const DEFAULT_PALETTE = () => {
+    return [
+        {
+            name: 'Necessities', color: 7, subs: [
+                {name: 'Eating', color: 1},
+                {name: 'Hygiene', color: 3},
+                {name: 'Exercise', color: 0},
+                {name: 'Sleep', color: 6}
+            ]
+        },
+        {
+            name: 'Leisure', color: 1, subs: [
+                {name: 'Social media', color: 3},
+                {name: 'TV', color: 2},
+                {name: 'Games', color: 8},
+                {name: 'Hobbies', color: 1}
+            ]
+        },
+        {
+            name: 'Work', color: 6, subs: []
+        },
+        {
+            name: 'Social', color: 10, subs: [
+                {name: 'Seeing friends', color: 4},
+                {name: 'Seeing family', color: 5},
+                {name: 'Events', color: 3}
+            ]
+        },
+        {
+            name: 'Errands', color: 3, subs: [
+                {name: 'Shopping', color: 2},
+                {name: 'Cleaning', color: 5},
+                {name: 'Cooking', color: 3},
+                {name: 'Appointments', color: 7}
+            ]
+        },
+        {
+            name: 'Transit', color: 8, subs: []
+        }
+    ];
+}
 
 const COLORS = [
     'hsl(355, 74%, 57%)', 'hsl(359, 62%, 64%)', 'hsl(7, 76%, 45%)',
@@ -778,56 +826,6 @@ const closeModal = () => {
         palette: false,
     }
 }
-
-let toRerender = {
-    info: false,
-    canvas: false,
-    palette: false,
-}
-
-const DEFAULT_PALETTE = () => {
-    return [
-        {
-            name: 'Survival', color: 7, subs: [
-                {name: 'Eating', color: 1},
-                {name: 'Hygiene', color: 3},
-                {name: 'Exercise', color: 0},
-                {name: 'Sleep', color: 6}
-            ]
-        },
-        {
-            name: 'Leisure', color: 1, subs: [
-                {name: 'Social media', color: 3},
-                {name: 'TV', color: 2},
-                {name: 'Games', color: 8},
-                {name: 'Hobbies', color: 1}
-            ]
-        },
-        {
-            name: 'Work', color: 6, subs: []
-        },
-        {
-            name: 'Social', color: 10, subs: [
-                {name: 'Seeing friends', color: 4},
-                {name: 'Seeing family', color: 5},
-                {name: 'Events', color: 3}
-            ]
-        },
-        {
-            name: 'Errands', color: 3, subs: [
-                {name: 'Shopping', color: 2},
-                {name: 'Cleaning', color: 5},
-                {name: 'Cooking', color: 3},
-                {name: 'Appointments', color: 7}
-            ]
-        },
-        {
-            name: 'Transit', color: 8, subs: []
-        }
-    ];
-}
-
-let DATABASE = null;
 
 const setYEARPixelsInDATABASE = () => {
     const tx = DATABASE.transaction('years', 'readwrite');
