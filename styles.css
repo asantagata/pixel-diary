@@ -303,6 +303,7 @@ a {
     width: 100%;
     height: 35%;
     border-top: 1px solid var(--gentle);
+    transform: translateY(-1px);
 }
 
 .panel {
@@ -456,7 +457,7 @@ input[type=text]::placeholder {
     cursor: pointer;
 }
 
-.x-button {
+.x-button, .delete {
     color: hsl(355, 74%, 57%);
 }
 
@@ -484,4 +485,43 @@ input[type=text]::placeholder {
     color: var(--bg);
     padding: 0.5ch 1ch;
     border-radius: 0.5ch;
+}
+
+.action-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1ch;
+}
+
+.action-badge {
+    display: flex;
+    padding: 0.5ch 1ch;
+    border-radius: 100dvh;
+    gap: 1ch;
+    border-width: 1px;
+    border-style: solid;
+    cursor: pointer;
+    font-size: medium;
+    align-items: center;
+}
+
+.ab-icon {
+    height: fit-content;
+}
+
+.action-badge:active {
+    transform: translateY(1px);
+}
+
+#saves-table {
+    border-collapse: collapse;
+}
+
+#saves-table td {
+    padding: 1ch;
+}
+
+#saves-menu td {
+    border: none;
+    border-top: 1px solid var(--gentle);
 }

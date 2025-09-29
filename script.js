@@ -153,7 +153,7 @@ const renderYEARCanvas = () => {
         document.getElementById('canvas').style.width = `${canvasWidth}px`;
         document.getElementById('canvas').setAttribute('height', `${canvasHeight}`);
         document.getElementById('canvas').style.height = `${canvasHeight}px`;
-        document.getElementById('grid').style.height = `calc(var(--bordered-cell-size) * ${daysInYear(YEAR.year)});`
+        document.getElementById('grid').style.height = `calc(var(--bordered-cell-size) * ${daysInYear(YEAR.year)})`;
     }
 
     setupCanvas();
@@ -661,6 +661,77 @@ const renderColorsMenu = () => {
     })());
 }
 
+const renderSavesMenu = () => {
+
+    const trFromYear = (year) => {
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.replaceChildren(document.createTextNode(year));
+        const actionsTd = document.createElement('td');
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'action-badges';
+        actionsDiv.replaceChildren(...[
+            ...(YEAR.year !== parseInt(year) ? [{
+                name: 'Open',
+                className: 'open',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open-icon lucide-folder-open"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>`,
+                onClick: () => {
+                    initialize(parseInt(year), false);
+                    document.getElementById('modal-wrapper').style.display = 'none';
+                }
+            }] : []),
+            {
+                name: 'Download image',
+                className: 'image',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-down-icon lucide-image-down"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19 3 3v-5.5"/><path d="m17 22 3-3"/><circle cx="9" cy="9" r="2"/></svg>`
+            },
+            {
+                name: 'Export to device',
+                className: 'export',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`
+            },
+            ...(YEAR.year !== parseInt(year) ? [{
+                name: 'Delete',
+                className: 'delete',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+                onClick: () => {
+                    summonMiniModal((() => {
+                        const div = document.createElement('div');
+                        div.className = 'col-gap';
+                        const button = document.createElement('div');
+                        button.className = 'button';
+                        button.replaceChildren(document.createTextNode(`Confirm`));
+                        button.addEventListener('click', () => {
+                            localStorage.removeItem(year);
+                            const tx = DATABASE.transaction('years', 'readwrite');
+                            tx.objectStore('years').delete(parseInt(year));
+                            renderSavesMenu();
+                        });
+                        div.replaceChildren(document.createTextNode(`Are you sure you want to delete your ${year} data?`), button);
+                        return div;
+                    })())
+                }
+            }] : [])
+        ].map(action => {
+            const actionBadge = document.createElement('div');
+            actionBadge.className = `action-badge ${action.className}`;
+            actionBadge.addEventListener('click', action.onClick);
+            const abIcon = document.createElement('div');
+            abIcon.className = 'ab-icon center';
+            abIcon.innerHTML = action.icon;
+            actionBadge.replaceChildren(abIcon, document.createTextNode(action.name));
+            return actionBadge;
+        }));
+        actionsTd.replaceChildren(actionsDiv);
+        tr.replaceChildren(nameTd, actionsTd);
+        return tr;
+    }
+
+    const savedYears = Object.keys(localStorage).filter(x => !Number.isNaN(parseInt(x)));
+    document.getElementById('saves-menu').replaceChildren(...savedYears.map(trFromYear));
+
+}
+
 const newRange = (n) => {
     return new Array(n).fill(0).map((_, i) => i);
 }
@@ -781,7 +852,7 @@ const getPaletteFromStorage = (year) => {
 const getLatestPaletteFromStorage = () => {
     const latestYear = Math.max(...Object.keys(localStorage).map(x => parseInt(x)).filter(x => !Number.isNaN(x)));
     if (latestYear > 0) {
-        return JSON.parse(localStorage.getItem(`${YEAR.year}`));
+        return JSON.parse(localStorage.getItem(`${latestYear}`));
     } else {
         return null;
     }
@@ -796,15 +867,17 @@ const getConfigsFromStorage = () => {
     return str ? JSON.parse(str) : null;
 }
 
-const initialize = () => {
+const initialize = (inputYear = null, scrollToToday = true) => {
     CONFIGS = getConfigsFromStorage() || {
         timeIn24: false
     };
     if (CONFIGS.timeIn24) {
         document.getElementById('24hour').setAttribute('checked', 'true');
     }
+    setConfigsInStorage();
 
-    const year = (new Date().getFullYear());
+    const now = inputYear ? new Date(inputYear, 0, 1) : new Date();
+    const year = (now.getFullYear());
 
     const request = indexedDB.open('years', 1);
 
@@ -821,18 +894,23 @@ const initialize = () => {
             YEAR = {
                 year: year,
                 activities: getPaletteFromStorage(year) || (getLatestPaletteFromStorage() || DEFAULT_PALETTE()),
-                cells: cells || new Uint8Array(48 * daysInYear((new Date()).getFullYear())).fill(255)
+                cells: cells || new Uint8Array(48 * daysInYear(now.getFullYear())).fill(255)
             };
             renderYEARInfo();
             renderYEARPalette();
             renderYEARCanvas();
+            document.getElementById('palette').className = 'panel-home';
 
-            const now = new Date();
-            const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-            const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
-            const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
-            selectCell(elapsedDays * 48 + elapsedHalfhours);
+            if (scrollToToday) {
+                const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+                const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+                selectCell(elapsedDays * 48 + elapsedHalfhours);
+            } else {
+                selectCell(0);
+            }
 
+            setYEARPaletteInStorage();
             setYEARPixelsInDATABASE();
         });
     };

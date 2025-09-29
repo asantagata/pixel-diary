@@ -9,7 +9,7 @@
 <body>
     <div id="app">
         <div id="calendar">
-            <div id="corner" onclick="document.getElementById('modal-wrapper').style.display = 'flex'; renderColorsMenu()">
+            <div id="corner" onclick="document.getElementById('modal-wrapper').style.display = 'flex'; renderColorsMenu(); renderSavesMenu()">
                 <div id="yearslot"></div>
                 <div id="corner-icons">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
@@ -43,7 +43,22 @@
                     <span>24-hour time</span>
                     <input autocomplete="off" type="checkbox" id="24hour" onclick="set24HourTime(event.target.checked)">
                 </label>
-                <div class="button">Export this year as an image</div>
+                <div style="text-align: center; font-weight: bold">Your years</div>
+                <div class="center">
+                    <div class="button center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-import-icon lucide-import"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg>
+                        Import from device
+                    </div>
+                </div>
+                <table id="saves-table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saves-menu"></tbody>
+                </table>
             </div>
             <div class="tab colors">
                 <div id="color-config" class="activities"></div>
@@ -56,7 +71,7 @@
                     <li>Tap <b>Activities</b> to edit your activities</li>
                     <li>Admire your year thus far</li>
                 </ul>
-                <p>Pixel diary uses <b>local storage</b>, so your data will not transfer to other devices or browsers. It may also be removed if you clear local storage from your browser.</p>
+                <p>Pixel diary uses <b>local storage</b> to store information, so your data will not transfer to other devices or browsers. It may also be removed if you clear local storage from your browser. You can utilize the <b>import/export</b> options to transfer data to other devices.</p>
             </div>
         </div>
     </div>
