@@ -735,7 +735,7 @@ const renderSavesMenu = () => {
                 className: 'open',
                 icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-open-icon lucide-folder-open"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>`,
                 onClick: () => {
-                    initialize(parseInt(year), false);
+                    initialize(parseInt(year));
                     document.getElementById('modal-wrapper').style.display = 'none';
                 }
             }] : []),
@@ -808,7 +808,9 @@ const renderSavesMenu = () => {
         return tr;
     }
 
-    const savedYears = Object.keys(localStorage).filter(x => !Number.isNaN(parseInt(x)));
+    const savedYears = Object.keys(localStorage)
+        .filter(x => !Number.isNaN(parseInt(x)))
+        .sort((a, b) => parseInt(b) - parseInt(a));
     document.getElementById('saves-menu').replaceChildren(...savedYears.map(trFromYear));
 
 }
@@ -967,7 +969,7 @@ const getConfigsFromStorage = () => {
     return str ? JSON.parse(str) : null;
 }
 
-const initialize = (inputYear = null, scrollToToday = true) => {
+const initialize = (inputYear = null) => {
     CONFIGS = getConfigsFromStorage() || {
         timeIn24: false
     };
@@ -976,7 +978,8 @@ const initialize = (inputYear = null, scrollToToday = true) => {
     }
     setConfigsInStorage();
 
-    const now = inputYear ? new Date(inputYear, 0, 1) : new Date();
+    const now = new Date();
+    if (inputYear) now.setFullYear(inputYear);
     const year = (now.getFullYear());
 
     const request = indexedDB.open('years', 1);
@@ -1001,14 +1004,10 @@ const initialize = (inputYear = null, scrollToToday = true) => {
             renderYEARCanvas();
             document.getElementById('palette').className = 'panel-home';
 
-            if (scrollToToday) {
-                const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-                const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
-                const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
-                selectCell(elapsedDays * 48 + elapsedHalfhours);
-            } else {
-                selectCell(0);
-            }
+            const months = [31, isLeap(now.getFullYear()) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            const elapsedDays = months.slice(0, now.getMonth()).reduce((acc, cur) => acc + cur, 0) + now.getDate() - 1;
+            const elapsedHalfhours = now.getHours() * 2 + (now.getMinutes() < 30 ? 0 : 1);
+            selectCell(elapsedDays * 48 + elapsedHalfhours);
 
             setYEARPaletteInStorage();
             setYEARPixelsInDATABASE();
