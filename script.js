@@ -135,27 +135,51 @@ const stringToCells = (string) => {
     return string.split('').map(char => FROMCHARS[char]);
 }
 
+const getDateList = (year) => {
+    const leap = isLeap(year);
+    const totalDays = daysInYear(year);
+    const months = [
+        {name: 'Jan', days: 31},
+        {name: 'Feb', days: leap ? 29 : 28},
+        {name: 'Mar', days: 31},
+        {name: 'Apr', days: 30},
+        {name: 'May', days: 31},
+        {name: 'Jun', days: 30},
+        {name: 'Jul', days: 31},
+        {name: 'Aug', days: 31},
+        {name: 'Sep', days: 30},
+        {name: 'Oct', days: 31},
+        {name: 'Nov', days: 30},
+        {name: 'Dec', days: 31}
+    ]
+    let monthId = 0;
+    let daysOfMonth = 0;
+    const dateList = [];
+    for (let i = 0; i < totalDays; i++) {
+        dateList.push(`${months[monthId].name} ${daysOfMonth + 1}`);
+        daysOfMonth++;
+        if (daysOfMonth === months[monthId].days) {
+            monthId++;
+            daysOfMonth = 0;
+        }
+    }
+    return dateList;
+}
+
+const getTimeStr = (i) => {
+    const maxHour = CONFIGS.timeIn24 ? 24 : 12;
+    const hour = `${(i >> 1) % maxHour || maxHour}`;
+    const minute = i % 2 === 0 ? '00' : '30';
+    const period = (i % 48) < 24 ? 'AM' : 'PM';
+    return `${hour}:${minute}${CONFIGS.timeIn24 ? '' : ` ${period}`}`;
+}
+
 const renderYEARInfo = () => {
     const rows = daysInYear(YEAR.year);
     const cols = 48;
 
     const renderDatetimes = () => {
-        const months = [
-            {name: 'Jan', days: 31},
-            {name: 'Feb', days: isLeap(YEAR.year) ? 29 : 28},
-            {name: 'Mar', days: 31},
-            {name: 'Apr', days: 30},
-            {name: 'May', days: 31},
-            {name: 'Jun', days: 30},
-            {name: 'Jul', days: 31},
-            {name: 'Aug', days: 31},
-            {name: 'Sep', days: 30},
-            {name: 'Oct', days: 31},
-            {name: 'Nov', days: 30},
-            {name: 'Dec', days: 31}
-        ]
-        let monthId = 0;
-        let daysOfMonth = 0;
+
 
         document.getElementById('dates').replaceChildren(
             (() => {
@@ -164,16 +188,12 @@ const renderYEARInfo = () => {
                 return span;
             })(),
 
-            ...new Array(rows).fill(0).map(_ => {
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(`${months[monthId].name} ${daysOfMonth + 1}`));
-            daysOfMonth++;
-            if (daysOfMonth === months[monthId].days) {
-                daysOfMonth = 0;
-                monthId++;
-            }
-            return div;
-        }));
+            ...getDateList(YEAR.year).map(date => {
+                const div = document.createElement('div');
+                div.appendChild(document.createTextNode(date));
+                return div;
+            })
+        );
 
         document.getElementById('times').replaceChildren(
 
@@ -185,11 +205,7 @@ const renderYEARInfo = () => {
 
             ...newRange(cols + 1).map(i => {
             const div = document.createElement('div');
-            const maxHour = CONFIGS.timeIn24 ? 24 : 12;
-            const hour = `${(i >> 1) % maxHour || maxHour}`;
-            const minute = i % 2 === 0 ? '00' : '30';
-            const period = (i % 48) < 24 ? 'AM' : 'PM';
-            div.appendChild(document.createTextNode(`${hour}:${minute}${CONFIGS.timeIn24 ? '' : ` ${period}`}`));
+            div.appendChild(document.createTextNode(getTimeStr(i)));
             return div;
         }));
 
@@ -744,7 +760,7 @@ const renderSavesMenu = () => {
                 className: 'image',
                 icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-down-icon lucide-image-down"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19 3 3v-5.5"/><path d="m17 22 3-3"/><circle cx="9" cy="9" r="2"/></svg>`,
                 onClick: () => {
-
+                    downloadYearImage(parseInt(year));
                 }
             },
             {
@@ -967,6 +983,183 @@ const setConfigsInStorage = () => {
 const getConfigsFromStorage = () => {
     const str = localStorage.getItem('configs');
     return str ? JSON.parse(str) : null;
+}
+
+const downloadYearImage = (year) => {
+
+    doWithPixelsFromDATABASE(year, (cells) => {
+
+        const activities = getPaletteFromStorage(`${year}`).flatMap(
+            act => act.subs.length === 0 ? {...act, color: 9 * act.color} : act.subs.map(sub => { return {...sub, color: act.color * 9 + sub.color} })
+        );
+
+        const PADDING = CELL_SIZE;
+        const DATE_WIDTH = 69;
+        const TIME_HEIGHT = CONFIGS.timeIn24 ? 56 : 85;
+        const rows = daysInYear(year);
+        const GRID_WIDTH = CELL_SIZE * 48;
+        const GRID_HEIGHT = CELL_SIZE * rows;
+        const TEXT_PADDING = 5;
+        const TEXT_GAP = 5;
+        const ACT_MAX_WIDTH = TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + GRID_WIDTH;
+
+        const canvas = document.createElement('canvas');
+
+        const ctx = canvas.getContext('2d');
+        ctx.font = "22px \"Chocolate Classical Sans\"";
+
+        const activitiesRows = [];
+        let currentRow = [], currentRowCumulativeSize = -1 * TEXT_GAP;
+        for (let i = 0; i < activities.length; i++) {
+            const thisTextWidth = ctx.measureText(activities[i].name).width;
+            const thisTextBoxWidth = TEXT_PADDING + thisTextWidth + TEXT_PADDING + TEXT_GAP;
+            const totalWidthIfInRow = currentRowCumulativeSize + thisTextBoxWidth;
+            if (totalWidthIfInRow > ACT_MAX_WIDTH) {
+                activitiesRows.push(currentRow);
+                currentRow = [];
+                currentRowCumulativeSize = -1 * TEXT_GAP;
+            }
+            currentRow.push({...activities[i], width: thisTextWidth});
+            currentRowCumulativeSize += thisTextBoxWidth;
+        }
+        activitiesRows.push(currentRow);
+
+        const CANVAS_WIDTH = PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + GRID_WIDTH + PADDING;
+        const ACT_START_HEIGHT = PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + GRID_HEIGHT + PADDING + CELL_SIZE + TEXT_PADDING * 2 + TEXT_GAP;
+        const CANVAS_HEIGHT = ACT_START_HEIGHT + activitiesRows.length * (CELL_SIZE + TEXT_PADDING * 2 + TEXT_GAP) - TEXT_GAP + PADDING;
+
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        const drawBackdrop = () => {
+            ctx.fillStyle = "#edecf0";
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fill();
+        }
+
+        const drawGridlines = () => {
+
+            ctx.strokeStyle = "#13111d44";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+
+            // horizontals
+            for (let i = 0; i < rows + 1; i++) {
+                ctx.moveTo(PADDING + 0.5, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + i * CELL_SIZE - 0.5);
+                ctx.lineTo(PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + GRID_WIDTH + 0.5, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + i * CELL_SIZE - 0.5);
+            }
+
+            // verticals
+            for (let i = 0; i < 49; i++) {
+                ctx.moveTo(PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + i * CELL_SIZE - 0.5, PADDING + ((i === 0) ? 0 : (TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING)) - 0.5);
+                ctx.lineTo(PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + i * CELL_SIZE - 0.5, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + GRID_HEIGHT - 0.5);
+            }
+
+            ctx.stroke();
+        }
+
+        const drawCells = () => {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < 48; col++) {
+                    const index = row * 48 + col;
+                    const colorIndex = cells[index];
+                    if (colorIndex !== 255) {
+                        ctx.fillStyle = COLORS[colorIndex];
+                        ctx.fillRect(PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + col * CELL_SIZE, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
+                }
+            }
+            ctx.fill();
+        }
+
+        const drawDates = () => {
+            ctx.font = "22px \"Chocolate Classical Sans\"";
+            ctx.fillStyle = "#13111d";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "right";
+            const DATE_LIST = getDateList(year);
+            for (let i = 0; i < DATE_LIST.length; i++) {
+                const dateStr = DATE_LIST[i];
+                ctx.fillText(dateStr, PADDING + TEXT_PADDING + DATE_WIDTH + 0.5, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + i * CELL_SIZE + CELL_SIZE / 2 + 0.5);
+            }
+        }
+
+        const drawTimes = () => {
+            ctx.font = "22px \"Chocolate Classical Sans\"";
+            ctx.rotate(Math.PI / 2);
+            for (let i = 0; i < 49; i++) {
+                const timeStr = getTimeStr(i);
+                ctx.fillStyle = i % 2 === 1 ? "#13111d44" : "#13111d";
+                ctx.fillText(timeStr, PADDING + TEXT_PADDING + TIME_HEIGHT + 0.5, (PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + i * CELL_SIZE) * -1);
+            }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = "#edecf0";
+            ctx.fillRect(0, 0, PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING);
+            ctx.fillRect(PADDING + TEXT_PADDING + DATE_WIDTH + TEXT_PADDING + CELL_SIZE * 48, 0, CELL_SIZE, PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING);
+        }
+
+        const drawActivities = () => {
+            ctx.font = "22px \"Chocolate Classical Sans\"";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "center";
+            ctx.fillStyle = '#13111d';
+            const yCenter = (PADDING + TEXT_PADDING + TIME_HEIGHT + TEXT_PADDING + GRID_HEIGHT + PADDING + ACT_START_HEIGHT) / 2;
+            const xCenter = CANVAS_WIDTH / 2;
+            ctx.fillText('Key', xCenter, yCenter);
+            for (let rowIx = 0; rowIx < activitiesRows.length; rowIx++) {
+                let row = activitiesRows[rowIx];
+                const totalRowWidth = row.reduce((acc, cur) => acc + cur.width, 0);
+                let rowProportionTaken = 0;
+                for (let cellIx = 0; cellIx < row.length; cellIx++) {
+                    const myProportion = row[cellIx].width / totalRowWidth;
+                    row[cellIx] = {
+                        ...row[cellIx],
+                        proportionBefore: rowProportionTaken,
+                        myProportion
+                    };
+                    rowProportionTaken += myProportion;
+                }
+
+                const ROW_WIDTH_MINUS_GAPS = ACT_MAX_WIDTH - TEXT_GAP * (row.length - 1);
+
+                for (let cellIx = 0; cellIx < row.length; cellIx++) {
+                    const act = row[cellIx];
+                    ctx.beginPath();
+                    ctx.fillStyle = COLORS[act.color];
+                    const x = PADDING + ROW_WIDTH_MINUS_GAPS * act.proportionBefore + TEXT_GAP * cellIx,
+                        y = ACT_START_HEIGHT + rowIx * (TEXT_PADDING * 2 + CELL_SIZE + TEXT_GAP),
+                        w = ROW_WIDTH_MINUS_GAPS * act.myProportion,
+                        h = TEXT_PADDING * 2 + CELL_SIZE
+                    ctx.roundRect(x, y, w, h, TEXT_PADDING);
+                    ctx.fill();
+                    ctx.fillStyle = WHITE_TEXT[act.color] ? '#edecf0' : '#13111d';
+                    ctx.fillText(act.name, x + (w / 2), y + (h / 2) + TEXT_PADDING / 2);
+                }
+
+            }
+        }
+
+        drawBackdrop();
+        drawDates();
+        drawTimes();
+        drawCells();
+        drawGridlines();
+        drawActivities();
+
+        ctx.fillStyle = '#13111d';
+        ctx.fillText(`'${year % 100}`, PADDING + TEXT_PADDING + DATE_WIDTH / 2, PADDING + TEXT_PADDING + TIME_HEIGHT / 2)
+
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pixel-diary-${year}.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+
+    })
+
 }
 
 const initialize = (inputYear = null) => {
