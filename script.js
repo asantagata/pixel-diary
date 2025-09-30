@@ -626,30 +626,17 @@ const renderColorsMenu = () => {
                 activitify.className = 'act-button';
                 activitify.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-icon lucide-square"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>`;
 
-                activitify.addEventListener('click', () => summonMiniModal((() => {
-                    const div = document.createElement('div');
-                    div.className = 'col-gap';
-                    const message = document.createElement('div');
-                    message.replaceChildren(document.createTextNode(
-                        'Turn category into activity? This will remove all sub-activities.'
-                    ));
-                    const button = document.createElement('div');
-                    button.className = 'button';
-                    button.replaceChildren(document.createTextNode(
-                        'Confirm'
-                    ));
-                    button.addEventListener('click', () => {
+                activitify.addEventListener('click', () => summonConfirm(
+                    'Turn category into activity? This will remove all sub-activities.',
+                    () => {
                         act.subs = [];
-                        document.getElementById('mini-modal-wrapper').style.display = 'none';
                         renderColorsMenu();
                         toRerender.palette = true;
 
                         replacePixels(new Map(newRange(9).map(i => [act.color * 9 + i, act.color * 9])));
                         toRerender.canvas = true;
-                    })
-                    div.replaceChildren(message, button);
-                    return div;
-                })()))
+                    }
+                ));
 
                 li.append(activitify);
             }
@@ -792,21 +779,12 @@ const renderSavesMenu = () => {
                 className: 'delete',
                 icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
                 onClick: () => {
-                    summonMiniModal((() => {
-                        const div = document.createElement('div');
-                        div.className = 'col-gap';
-                        const button = document.createElement('div');
-                        button.className = 'button';
-                        button.replaceChildren(document.createTextNode(`Confirm`));
-                        button.addEventListener('click', () => {
-                            localStorage.removeItem(year);
-                            const tx = DATABASE.transaction('years', 'readwrite');
-                            tx.objectStore('years').delete(parseInt(year));
-                            renderSavesMenu();
-                        });
-                        div.replaceChildren(document.createTextNode(`Are you sure you want to delete your ${year} data?`), button);
-                        return div;
-                    })())
+                    summonConfirm(`Are you sure you want to delete your ${year} data?`, () => {
+                        localStorage.removeItem(year);
+                        const tx = DATABASE.transaction('years', 'readwrite');
+                        tx.objectStore('years').delete(parseInt(year));
+                        renderSavesMenu();
+                    });
                 }
             }] : [])
         ].map(action => {
@@ -857,7 +835,6 @@ const importYear = () => {
                         setYEARPaletteInStorage(newYear);
                         setYEARPixelsInDATABASE(newYear, (e) => {
                             renderSavesMenu();
-                            document.getElementById('mini-modal-wrapper').style.display = 'none';
                             if (YEAR.year === newYear.year) {
                                 initialize(YEAR.year);
                                 document.getElementById('modal-wrapper').style.display = 'none';
@@ -866,22 +843,10 @@ const importYear = () => {
                     }
 
                     if (localStorage.getItem(`${newYearObj.year}`)) {
-                        const div = document.createElement('div');
-                        div.className = 'col-gap';
-                        const message = document.createElement('div');
-                        message.replaceChildren(document.createTextNode(
-                            `Import new year? This will replace your current data for the year ${newYearObj.year}.`
-                        ));
-                        const button = document.createElement('div');
-                        button.className = 'button';
-                        button.replaceChildren(document.createTextNode(
-                            'Confirm'
-                        ));
-                        button.addEventListener('click', () => {
-                            proceedWithImport();
-                        });
-                        div.replaceChildren(message, button);
-                        summonMiniModal(div);
+                        summonConfirm(
+                            `Import new year? This will replace your current data for the year ${newYearObj.year}.`,
+                            proceedWithImport
+                        );
                     } else {
                         proceedWithImport();
                     }
@@ -909,6 +874,24 @@ const chooseRandomFromUnused = (set, max) => {
 const summonMiniModal = (element) => {
     document.getElementById('mini-modal-inner').replaceChildren(element);
     document.getElementById('mini-modal-wrapper').style.display = 'flex';
+}
+
+const summonConfirm = (warning, ifConfirmed) => {
+    const div = document.createElement('div');
+    div.className = 'col-gap';
+    const message = document.createElement('div');
+    message.replaceChildren(document.createTextNode(warning));
+    const button = document.createElement('div');
+    button.className = 'button';
+    button.replaceChildren(document.createTextNode(
+        'Confirm'
+    ));
+    button.addEventListener('click', () => {
+        ifConfirmed();
+        document.getElementById('mini-modal-wrapper').style.display = 'none';
+    });
+    div.replaceChildren(message, button);
+    summonMiniModal(div);
 }
 
 const replacePixels = (replacements) => {
