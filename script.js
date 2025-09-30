@@ -324,6 +324,25 @@ const renderYEARPalette = () => {
                     paintSELECTION(ctx, colorId)
                 });
             }
+            if (!sub.isHome && !sub.isErase) {
+                button.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    renderColorsMenu();
+                    renderSavesMenu();
+                    document.getElementById('modal-wrapper').style.display = 'flex';
+                    document.getElementById('modal').className = 'colors';
+                    window.requestAnimationFrame(() => {
+                        window.requestAnimationFrame(() => {
+                            const li = document.getElementById(`activity-${activity.isTop ? sub.color * 9 : activity.color * 9 + sub.color}`);
+                            li.scrollIntoView({
+                                block: 'center',
+                                behavior: 'smooth'
+                            });
+                            li.style.animation = 'li-pulse 1s ease-in-out';
+                        });
+                    });
+                });
+            }
             return button;
         }));
         return panel;
@@ -417,6 +436,7 @@ const renderColorsMenu = () => {
         const li = document.createElement('div');
         li.className = 'activity';
         const myColorId = parent ? (parent.color * 9 + act.color) : (act.color * 9);
+        li.id = `activity-${myColorId}`;
         const swatch = document.createElement('span');
         swatch.className = 'swatch';
         swatch.style.background = COLORS[myColorId];
