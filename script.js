@@ -968,6 +968,17 @@ const getConfigsFromStorage = () => {
     return str ? JSON.parse(str) : null;
 }
 
+const resetAll = () => {
+    summonConfirm(`Are you sure you want to reset all data? This cannot be reversed.`, () => {
+        localStorage.clear();
+        const tx = DATABASE.transaction('years', 'readwrite');
+        const req = tx.objectStore('years').clear();
+        req.onsuccess = () => {
+            window.location.reload();
+        };
+    });
+}
+
 const downloadYearImage = (year) => {
 
     doWithPixelsFromDATABASE(year, (cells) => {

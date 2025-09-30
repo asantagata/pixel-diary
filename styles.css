@@ -457,7 +457,7 @@ input[type=text]::placeholder {
     cursor: pointer;
 }
 
-.x-button, .delete {
+.x-button, .delete, #warning {
     color: hsl(355, 74%, 57%);
 }
 
@@ -524,4 +524,10 @@ input[type=text]::placeholder {
 #saves-menu td {
     border: none;
     border-top: 1px solid var(--gentle);
+}
+
+#warning {
+    font-size: small;
+    text-decoration: underline;
+    cursor: pointer;
 }
