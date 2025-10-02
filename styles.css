@@ -154,7 +154,7 @@ body {
     align-items: end;
 }
 
-#times div:nth-child(even) {
+#times div:nth-child(odd) {
     color: var(--gentle);
 }
 
